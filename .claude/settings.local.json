@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"d:/새 폴더/BleedingSpring\" status)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
