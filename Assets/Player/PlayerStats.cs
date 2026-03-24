@@ -23,11 +23,11 @@ public class PlayerStats : MonoBehaviour, IDamageable
         CurrentHp = maxHp;
     }
 
-    // IDamageable 구현 — 외부에서 데미지를 줄 때 사용
-    public void TakeDamage(float amount)
+    // IDamageable 구현 — 외부에서 데미지를 줄 때 사용 (corruptionDamage는 PlayerStats에서 무시)
+    public void TakeDamage(float hpDamage, float corruptionDamage)
     {
-        if (amount <= 0) return;
-        CurrentHp = Mathf.Max(0f, CurrentHp - amount);
+        if (hpDamage <= 0) return;
+        CurrentHp = Mathf.Max(0f, CurrentHp - hpDamage);
         OnHpChanged?.Invoke(CurrentHp, maxHp);
         if (CurrentHp <= 0f) OnDeath?.Invoke();
     }

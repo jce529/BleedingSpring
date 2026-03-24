@@ -2,53 +2,72 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// [J] 기본 공격 스킬. 단계별 물 속성 근거리 공격.
+/// [J] 기본 공격. 전방 작은 직사각형 범위.
 ///
-/// 0단계: 순수 물리 찌르기/베기
-/// 1단계: 검 끝 물보라, 리치 +0.3
+/// 0단계: 물리 찌르기
+/// 1단계: 물보라, 리치 +0.3
 /// 2단계: 물보라 강화, 리치 +0.6
-/// 3단계: 거대한 물의 잔상 — 0.1초 후 50% 추가 타격
+/// 3단계: 물의 잔상 — 0.1초 후 50% 추가 타격
 /// </summary>
 public class BasicAttackSkill : SkillBase
 {
-    [Header("[J] 기본 공격")]
-    [SerializeField] private float     baseDamage   = 15f;
-    [SerializeField] private float     baseRange    = 1.5f;
-    [SerializeField] private Transform attackPoint;
+    [Header("[J] 기본 공격 — 박스 범위")]
+    [SerializeField] private float baseDamage  = 15f;
+    [SerializeField] private float boxWidth    = 1.5f;   // 전방 너비
+    [SerializeField] private float boxHeight   = 1.0f;   // 세로 높이
 
-    // 단계별 추가 리치 (3단계는 리치 대신 다중 타격이므로 0)
-    private static readonly float[] RangeBonus = { 0f, 0.3f, 0.6f, 0f };
+    // 단계별 너비 보너스
+    private static readonly float[] WidthBonus = { 0f, 0.3f, 0.6f, 0f };
+
+    private static readonly string[] StageName =
+        { "물리 찌르기", "물보라 베기", "강화 물보라", "물의 잔상" };
+
+    // 쿨다운을 Attack1 애니메이션 길이에 자동 맞춤
+    protected override void OnInitialize()
+    {
+        float clipLen = GetClipLength("HeroKnight_Attack1");
+        if (clipLen > 0f) cooldownDuration = clipLen;
+    }
 
     protected override IEnumerator ExecuteSkill()
     {
-        float   range  = baseRange + RangeBonus[currentStage];
-        Vector2 center = attackPoint != null
-            ? (Vector2)attackPoint.position
-            : (Vector2)transform.position;
+        float   width  = boxWidth + WidthBonus[currentStage];
+        Vector2 size   = new Vector2(width, boxHeight);
+        Vector2 center = GetFrontBoxCenter(width);
 
-        // 1차 타격
-        DamageAll(center, range, baseDamage);
+        Debug.Log($"[J] {StageName[currentStage]} — 박스: {width:F2}×{boxHeight:F2} | 데미지: {baseDamage:F0}");
+        ShowBoxIndicator(center, size);
 
-        // 3단계: 물의 잔상 연속 타격 (50%)
+        int hits = DamageBox(center, size, baseDamage);
+        Debug.Log($"[J] 1차 적중: {hits}명");
+
+        // 3단계: 잔상 추가 타격
         if (currentStage >= 3)
         {
             yield return new WaitForSeconds(0.1f);
-            DamageAll(center, range, baseDamage * 0.5f);
+            ShowBoxIndicator(center, size);
+            int echoHits = DamageBox(center, size, baseDamage * 0.5f);
+            Debug.Log($"[J] 잔상 추가 적중: {echoHits}명 | 데미지: {baseDamage * 0.5f:F0}");
         }
 
         yield break;
     }
 
-    private void DamageAll(Vector2 center, float radius, float damage)
+    private int DamageBox(Vector2 center, Vector2 size, float damage)
     {
-        foreach (var hit in Physics2D.OverlapCircleAll(center, radius, enemyLayer))
-            hit.GetComponent<IDamageable>()?.TakeDamage(damage);
+        var hits = Physics2D.OverlapBoxAll(center, size, 0f, enemyLayer);
+        foreach (var h in hits)
+            h.GetComponent<IDamageable>()?.TakeDamage(damage, GetCorruptionDamage(damage));
+        return hits.Length;
     }
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        Vector3 pos = attackPoint != null ? attackPoint.position : transform.position;
-        Gizmos.DrawWireSphere(pos, baseRange);
+        float   width  = boxWidth + (currentStage < 4 ? WidthBonus[currentStage] : 0f);
+        float   dir    = transform.localScale.x > 0 ? 1f : -1f;
+        Vector2 center = (Vector2)transform.position + Vector2.right * dir * width * 0.5f;
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireCube(center, new Vector3(width, boxHeight, 0f));
     }
 }

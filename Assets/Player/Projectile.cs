@@ -9,6 +9,7 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
     private float       damage;
+    private float       corruptionDamage;
     private bool        penetrating;   // 관통 여부 (2단계 수창)
     private LayerMask   enemyLayer;
 
@@ -25,11 +26,12 @@ public class Projectile : MonoBehaviour
     /// <param name="penetrating">true 이면 적을 관통</param>
     /// <param name="lifetime">소멸까지 시간(초)</param>
     /// <param name="enemyLayer">충돌 판정할 레이어</param>
-    public void Initialize(float damage, float speed, bool penetrating, float lifetime, LayerMask enemyLayer)
+    public void Initialize(float damage, float corruptionDamage, float speed, bool penetrating, float lifetime, LayerMask enemyLayer)
     {
-        this.damage      = damage;
-        this.penetrating = penetrating;
-        this.enemyLayer  = enemyLayer;
+        this.damage           = damage;
+        this.corruptionDamage = corruptionDamage;
+        this.penetrating      = penetrating;
+        this.enemyLayer       = enemyLayer;
 
         rb.linearVelocity = transform.right * speed;
         Destroy(gameObject, lifetime);
@@ -40,7 +42,7 @@ public class Projectile : MonoBehaviour
         // 적 레이어인지 확인
         if ((enemyLayer.value & (1 << other.gameObject.layer)) == 0) return;
 
-        other.GetComponent<IDamageable>()?.TakeDamage(damage);
+        other.GetComponent<IDamageable>()?.TakeDamage(damage, corruptionDamage);
 
         if (!penetrating)
             Destroy(gameObject);

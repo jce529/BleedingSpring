@@ -6,10 +6,10 @@ using UnityEngine;
 /// </summary>
 public interface IPlayerContext
 {
-    bool        FacingRight  { get; }
-    Rigidbody2D Rigidbody    { get; }
-    PlayerStats Stats        { get; }
-    PlayerState CurrentState { get; }
+    bool             FacingRight  { get; }
+    Rigidbody2D      Rigidbody    { get; }
+    PlayerWaterStats Stats        { get; }   // PlayerStats → PlayerWaterStats
+    PlayerState      CurrentState { get; }
 
     void ChangeState(PlayerState newState);
 

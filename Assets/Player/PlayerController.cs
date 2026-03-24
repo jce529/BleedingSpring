@@ -2,27 +2,20 @@ using UnityEngine;
 
 /// <summary>
 /// 플레이어의 최상위 오케스트레이터. IPlayerContext를 구현해 하위 컴포넌트에 컨텍스트를 제공합니다.
-///
-/// 책임 (SRP):
-///   - 입력 읽기 및 위임
-///   - PlayerState 상태 머신 관리
-///   - GameStateManager 연동
-///
-/// 의존 관계 (DIP):
-///   - PlayerMovement, SkillBase 는 IPlayerContext(추상)에만 의존합니다.
-///   - 새 스킬 추가 시 이 클래스를 수정할 필요가 없습니다. (OCP)
+/// Animator 파라미터는 HeroKnight_AnimController 기준입니다.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
-[RequireComponent(typeof(PlayerStats))]
+[RequireComponent(typeof(PlayerWaterStats))]
 [RequireComponent(typeof(PlayerMovement))]
+[RequireComponent(typeof(InputHandler))]
 public class PlayerController : MonoBehaviour, IPlayerContext
 {
     // ─── IPlayerContext 구현 ─────────────────────────────────────────────────
 
-    public bool        FacingRight  => movement.FacingRight;
-    public Rigidbody2D Rigidbody    { get; private set; }
-    public PlayerStats Stats        { get; private set; }
-    public PlayerState CurrentState { get; private set; } = PlayerState.Idle;
+    public bool             FacingRight  => movement.FacingRight;
+    public Rigidbody2D      Rigidbody    { get; private set; }
+    public PlayerWaterStats Stats        { get; private set; }
+    public PlayerState      CurrentState { get; private set; } = PlayerState.Idle;
 
     public void ChangeState(PlayerState newState)
     {
@@ -35,46 +28,69 @@ public class PlayerController : MonoBehaviour, IPlayerContext
 
     // ─── 컴포넌트 참조 ───────────────────────────────────────────────────────
 
-    private PlayerMovement   movement;
+    private PlayerMovement movement;
+    private InputHandler   inputHandler;
+    private ISkill         basicAttack;
+    private ISkill         wideSlash;
+    private ISkill         projectile;
+    private bool           isInvincible;
+    private Animator       animator;
 
-    // 각 스킬을 ISkill로 참조 — 구체 타입에 의존하지 않습니다. (DIP)
-    private ISkill           basicAttack;
-    private ISkill           wideSlash;
-    private ISkill           projectile;
+    // 이동 입력 (InputHandler.OnMove 이벤트로 갱신)
+    private Vector2 moveInput;
 
-    private bool             isInvincible;
-    private Animator         animator;
+    // 공격 콤보 (Attack1 → Attack2 → Attack3 → 반복)
+    private int   attackCombo    = 0;
+    private float lastAttackTime = -99f;
 
     // ─── 초기화 ──────────────────────────────────────────────────────────────
 
     private void Awake()
     {
-        Rigidbody = GetComponent<Rigidbody2D>();
-        Stats     = GetComponent<PlayerStats>();
-        movement  = GetComponent<PlayerMovement>();
+        Rigidbody    = GetComponent<Rigidbody2D>();
+        Stats        = GetComponent<PlayerWaterStats>();
+        movement     = GetComponent<PlayerMovement>();
+        inputHandler = GetComponent<InputHandler>();
 
-        // MonoBehaviour는 인터페이스로 직접 GetComponent 불가 — 구체 타입으로 꺼낸 뒤 ISkill로 대입합니다.
         basicAttack = GetComponent<BasicAttackSkill>()  as ISkill;
         wideSlash   = GetComponent<WideSlashSkill>()    as ISkill;
         projectile  = GetComponent<ProjectileSkill>()   as ISkill;
 
-        TryGetComponent(out animator);   // Animator는 선택 사항
+        TryGetComponent(out animator);
     }
 
     private void Start()
     {
-        // 의존성 주입: 각 하위 컴포넌트에 IPlayerContext(this)를 전달합니다.
         movement.Initialize(this);
 
         InitSkill(basicAttack);
         InitSkill(wideSlash);
         InitSkill(projectile);
 
+        inputHandler.OnMove            += HandleMoveInput;
+        inputHandler.OnJump            += HandleJumpInput;
+        inputHandler.OnDash            += HandleDashInput;
+        inputHandler.OnBasicAttack     += HandleBasicAttackInput;
+        inputHandler.OnWideSlash       += HandleWideSlashInput;
+        inputHandler.OnProjectile      += HandleProjectileInput;
+        inputHandler.OnWaterTierSwitch += HandleWaterTierSwitchInput;
+
         Stats.OnDeath += HandleDeath;
     }
 
     private void OnDestroy()
     {
+        if (inputHandler != null)
+        {
+            inputHandler.OnMove            -= HandleMoveInput;
+            inputHandler.OnJump            -= HandleJumpInput;
+            inputHandler.OnDash            -= HandleDashInput;
+            inputHandler.OnBasicAttack     -= HandleBasicAttackInput;
+            inputHandler.OnWideSlash       -= HandleWideSlashInput;
+            inputHandler.OnProjectile      -= HandleProjectileInput;
+            inputHandler.OnWaterTierSwitch -= HandleWaterTierSwitchInput;
+        }
+
         if (Stats != null) Stats.OnDeath -= HandleDeath;
     }
 
@@ -84,16 +100,9 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     {
         if (CurrentState == PlayerState.Dead) return;
 
-        if (GameStateManager.Instance != null &&
-            GameStateManager.Instance.CurrentState != GameStateManager.GameState.Playing) return;
-
         movement.Tick();
-
         HandleGroundStateTransitions();
-        HandleMovementInput();
-        HandleJumpInput();
-        HandleDashInput();
-        HandleCombatInput();
+        ApplyMovement();
     }
 
     // ─── 상태 전이 ───────────────────────────────────────────────────────────
@@ -102,23 +111,42 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     {
         float vy = Rigidbody.linearVelocity.y;
 
-        if (CurrentState == PlayerState.Jumping && vy < 0f)
-            ChangeState(PlayerState.Falling);
-        else if (CurrentState == PlayerState.Falling && movement.IsGrounded)
-            ChangeState(PlayerState.Idle);
+        switch (CurrentState)
+        {
+            case PlayerState.Jumping:
+                // 정점 통과 후 하강 시작
+                if (vy < 0f)
+                    ChangeState(PlayerState.Falling);
+                break;
 
-        // 대쉬가 끝나면 자동으로 Idle/Falling 으로 복귀
-        if (CurrentState == PlayerState.Dashing && !movement.IsDashing)
-            ChangeState(movement.IsGrounded ? PlayerState.Idle : PlayerState.Falling);
+            case PlayerState.Falling:
+                // 착지
+                if (movement.IsGrounded)
+                    ChangeState(PlayerState.Idle);
+                break;
+
+            case PlayerState.Idle:
+            case PlayerState.Moving:
+                // 발판에서 걸어서 떨어지는 경우 (점프 없이 낙하)
+                if (!movement.IsGrounded && vy < 0f)
+                    ChangeState(PlayerState.Falling);
+                break;
+
+            case PlayerState.Dashing:
+                if (!movement.IsDashing)
+                    ChangeState(movement.IsGrounded ? PlayerState.Idle : PlayerState.Falling);
+                break;
+        }
     }
 
-    // ─── 입력 처리 ───────────────────────────────────────────────────────────
+    // ─── 이동 ────────────────────────────────────────────────────────────────
 
-    private void HandleMovementInput()
+    private void ApplyMovement()
     {
-        if (CurrentState == PlayerState.Dashing) return;
+        if (CurrentState == PlayerState.Dashing)  return;
+        if (CurrentState == PlayerState.Attacking) return;
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
+        float horizontal = moveInput.x;
         movement.Move(horizontal);
 
         if (horizontal != 0f)
@@ -132,25 +160,75 @@ public class PlayerController : MonoBehaviour, IPlayerContext
         }
     }
 
+    // ─── 입력 이벤트 핸들러 ──────────────────────────────────────────────────
+
+    private void HandleMoveInput(Vector2 input)
+    {
+        moveInput = input;
+    }
+
     private void HandleJumpInput()
     {
-        if (Input.GetKeyDown(KeyCode.K) && movement.TryJump())
+        if (CurrentState == PlayerState.Attacking) return;
+        if (movement.TryJump())
+        {
             ChangeState(PlayerState.Jumping);
+            animator?.SetTrigger("Jump");
+        }
     }
 
     private void HandleDashInput()
     {
-        if (Input.GetKeyDown(KeyCode.L) && movement.TryDash())
+        if (CurrentState == PlayerState.Attacking) return;
+        if (movement.TryDash())
+        {
             ChangeState(PlayerState.Dashing);
+            animator?.SetTrigger("Roll");
+        }
     }
 
-    private void HandleCombatInput()
+    private void HandleBasicAttackInput()
     {
-        if (CurrentState == PlayerState.Dashing) return;
+        if (CurrentState == PlayerState.Dashing)  return;
+        if (CurrentState == PlayerState.Attacking) return;
+        basicAttack?.TryUse();
 
-        if (Input.GetKeyDown(KeyCode.J) && basicAttack != null) basicAttack.TryUse();
-        if (Input.GetKeyDown(KeyCode.U) && wideSlash   != null) wideSlash.TryUse();
-        if (Input.GetKeyDown(KeyCode.I) && projectile  != null) projectile.TryUse();
+        // 1초 이상 지나면 콤보 리셋
+        if (Time.time - lastAttackTime > 1.0f)
+            attackCombo = 0;
+
+        attackCombo    = (attackCombo % 3) + 1;   // 1 → 2 → 3 → 1
+        lastAttackTime = Time.time;
+
+        animator?.SetTrigger("Attack" + attackCombo);
+    }
+
+    private void HandleWideSlashInput()
+    {
+        if (CurrentState == PlayerState.Dashing)  return;
+        if (CurrentState == PlayerState.Attacking) return;
+        wideSlash?.TryUse();
+        // WideSlash는 Attack1 애니메이션 사용 (별도 애니가 없으므로)
+        animator?.SetTrigger("Attack1");
+    }
+
+    private void HandleProjectileInput()
+    {
+        if (CurrentState == PlayerState.Dashing)  return;
+        if (CurrentState == PlayerState.Attacking) return;
+        projectile?.TryUse();
+        // Projectile도 Attack2 애니메이션 사용
+        animator?.SetTrigger("Attack2");
+    }
+
+    private void HandleWaterTierSwitchInput()
+    {
+        Stats.CycleWaterTier();
+
+        int tier = Stats.WaterTier;
+        (basicAttack as SkillBase)?.SetStage(tier);
+        (wideSlash   as SkillBase)?.SetStage(tier);
+        (projectile  as SkillBase)?.SetStage(tier);
     }
 
     // ─── 유틸리티 ────────────────────────────────────────────────────────────
@@ -160,12 +238,35 @@ public class PlayerController : MonoBehaviour, IPlayerContext
         if (skill != null) skill.Initialize(this);
     }
 
+    // ─── 디버그 ──────────────────────────────────────────────────────────────
+
+    private void OnGUI()
+    {
+        GUIStyle style = new GUIStyle(GUI.skin.label);
+        style.fontSize  = 20;
+        style.normal.textColor = Color.yellow;
+
+        float vy = Rigidbody != null ? Rigidbody.linearVelocity.y : 0f;
+
+        string info =
+            $"State     : {CurrentState}\n" +
+            $"IsGrounded: {movement.IsGrounded}\n" +
+            $"VelocityY : {vy:F2}\n" +
+            $"IsDashing : {movement.IsDashing}\n" +
+            $"WaterTier : {Stats.WaterTier}\n" +
+            $"HP        : {Stats.CurrentCleanWater:F0}\n" +
+            $"Corruption: {Stats.CurrentCorruption:F0}";
+
+        GUI.Label(new Rect(10, 10, 400, 200), info, style);
+    }
+
     // ─── 사망 처리 ───────────────────────────────────────────────────────────
 
     private void HandleDeath()
     {
         ChangeState(PlayerState.Dead);
+        moveInput                = Vector2.zero;
         Rigidbody.linearVelocity = Vector2.zero;
-        if (animator != null) animator.SetTrigger("Death");
+        animator?.SetTrigger("Death");
     }
 }
