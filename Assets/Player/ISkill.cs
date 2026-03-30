@@ -6,6 +6,10 @@ public interface ISkill
 {
     bool IsOnCooldown { get; }
     int  Stage        { get; }
+    /// <summary>현재 쿨다운 남은 시간(초). 쿨다운 중이 아니면 0.</summary>
+    float CooldownRemaining { get; }
+    /// <summary>총 쿨다운 시간(초).</summary>
+    float CooldownDuration  { get; }
 
     /// <summary>PlayerController.Start()에서 호출합니다.</summary>
     void Initialize(IPlayerContext context);
