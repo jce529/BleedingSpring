@@ -7,7 +7,7 @@ using UnityEngine;
 /// 게임 핵심 메커니즘:
 ///   - 물(Water)은 체력이자 스킬 자원입니다. 스킬 사용 시 SacrificeWater()로 소모합니다.
 ///   - 적에게 피격 시 데미지뿐 아니라 오염도(Corruption)도 증가합니다.
-///   - 오염도가 maxCorruptionThreshold에 도달하면 체력과 무관하게 즉사합니다.
+///   - 오염도가 현재 체력(CurrentCleanWater) 이상이 되면 즉사합니다.
 ///   - waterTier(0~3)는 O키로 순환하며, 스킬 위력과 소모량에 영향을 줍니다.
 /// </summary>
 public class PlayerWaterStats : MonoBehaviour, IDamageable
@@ -151,7 +151,7 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
     /// <summary>
     /// 사망 조건을 검사합니다.
     ///   - 체력(CurrentCleanWater) ≤ 0
-    ///   - 오염도(CurrentCorruption) ≥ maxCorruptionThreshold
+    ///   - 오염도(CurrentCorruption) >= 현재 체력(CurrentCleanWater)
     /// 조건 충족 시 OnDeath 이벤트를 발생시키고 GameStateManager에 GameOver를 알립니다.
     /// </summary>
     public void CheckDeath()
@@ -159,14 +159,14 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
         if (isDead) return;
 
         bool waterDepleted   = CurrentCleanWater <= 0f;
-        bool corruptionDeath = CurrentCorruption >= maxCorruptionThreshold;
+        bool corruptionDeath = CurrentCorruption >= CurrentCleanWater;
 
         if (!waterDepleted && !corruptionDeath) return;
 
         isDead = true;
 
         if (corruptionDeath)
-            Debug.Log("[PlayerWaterStats] 오염도 초과 — 즉사 처리");
+            Debug.Log("[PlayerWaterStats] 오염도 >= 현재 HP -- 즉사 처리");
         else
             Debug.Log("[PlayerWaterStats] 체력 고갈 — 사망 처리");
 
