@@ -12,7 +12,7 @@
 - [ ] **HUD-01**: 플레이어 오염도(Corruption) 바가 화면에 표시되고 `PlayerWaterStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
 - [ ] **HUD-02**: 오염도 바는 수치가 80% 이상이 되면 색상이 점진적으로 위험 색(적색/주황)으로 변화해 두 번째 즉사 축을 시각적으로 경고한다
 - [ ] **HUD-03**: 워터 티어 표시기(0~3단계)가 HUD에 표시되고 O키 전환 시 즉시 업데이트된다
-- [ ] **HUD-04**: 플레이어 HP가 25% 이하일 때 화면 가장자리에 빨간 펄스/비네트 효과가 나타나 위험 상태를 알린다 (HP 바 없이 HP 값 기반으로 트리거)
+- [x] **HUD-04**: 플레이어 HP가 25% 이하일 때 화면 가장자리에 빨간 펄스/비네트 효과가 나타나 위험 상태를 알린다 (HP 바 없이 HP 값 기반으로 트리거)
 
 ### Enemy World Space UI
 
@@ -32,7 +32,7 @@
 
 ### Technical Prerequisites
 
-- [ ] **TECH-01**: `ISkill` 인터페이스에 `CooldownRemaining`과 `CooldownDuration` 프로퍼티가 추가된다 (스킬 쿨다운 UI가 v2에서 이 인터페이스를 사용할 수 있도록 준비)
+- [x] **TECH-01**: `ISkill` 인터페이스에 `CooldownRemaining`과 `CooldownDuration` 프로퍼티가 추가된다 (스킬 쿨다운 UI가 v2에서 이 인터페이스를 사용할 수 있도록 준비)
 - [ ] **TECH-02**: `EnemyStats`에 `OnHpChanged(float current, float max)` 이벤트가 추가된다 (기존 `OnDamaged` 대신 명시적 이벤트로 HP 바 업데이트)
 - [ ] **TECH-03**: 모든 UI 바 스크립트는 `Bind(stats)` / `Unbind()` 패턴을 구현해 이벤트 구독 누수를 방지한다 (특히 Purify 경로에서 `OnDestroy` 미호출 문제 대응)
 
@@ -81,8 +81,8 @@
 | HUD-01 | Phase 1 | Pending |
 | HUD-02 | Phase 1 | Pending |
 | HUD-03 | Phase 1 | Pending |
-| HUD-04 | Phase 1 | Pending |
-| TECH-01 | Phase 1 | Pending |
+| HUD-04 | Phase 1 | Complete |
+| TECH-01 | Phase 1 | Complete |
 | ENM-01 | Phase 2 | Pending |
 | ENM-02 | Phase 2 | Pending |
 | ENM-03 | Phase 2 | Pending |
