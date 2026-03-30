@@ -12,6 +12,8 @@ public abstract class SkillBase : MonoBehaviour, ISkill
     [SerializeField]              protected float     cooldownDuration = 0.5f;
     [SerializeField]              protected LayerMask enemyLayer;
 
+    private float _cooldownRemaining;
+
     [Header("단계별 오염도 데미지 비율 (HP 데미지 대비, 0단계 = 0%)")]
     [SerializeField] protected float[] corruptionRatioPerStage = { 0f, 0.3f, 0.6f, 1.0f };
 
@@ -25,6 +27,8 @@ public abstract class SkillBase : MonoBehaviour, ISkill
 
     public bool IsOnCooldown { get; private set; }
     public int  Stage        => currentStage;
+    public float CooldownRemaining => _cooldownRemaining;
+    public float CooldownDuration  => cooldownDuration;
 
     protected IPlayerContext Context { get; private set; }
     protected Animator       Anim    { get; private set; }
@@ -118,7 +122,13 @@ public abstract class SkillBase : MonoBehaviour, ISkill
 
         yield return StartCoroutine(ExecuteSkill());
 
-        yield return new WaitForSeconds(cooldownDuration);
+        _cooldownRemaining = cooldownDuration;
+        while (_cooldownRemaining > 0f)
+        {
+            _cooldownRemaining -= Time.deltaTime;
+            yield return null;
+        }
+        _cooldownRemaining = 0f;
         IsOnCooldown = false;
 
         if (Context.CurrentState == PlayerState.Attacking)
