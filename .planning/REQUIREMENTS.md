@@ -9,9 +9,9 @@
 
 ### Player HUD
 
-- [ ] **HUD-01**: 플레이어 오염도(Corruption) 바가 화면에 표시되고 `PlayerWaterStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
+- [x] **HUD-01**: 플레이어 오염도(Corruption) 바가 화면에 표시되고 `PlayerWaterStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
 - [ ] **HUD-02**: 오염도 바는 수치가 80% 이상이 되면 색상이 점진적으로 위험 색(적색/주황)으로 변화해 두 번째 즉사 축을 시각적으로 경고한다
-- [ ] **HUD-03**: 워터 티어 표시기(0~3단계)가 HUD에 표시되고 O키 전환 시 즉시 업데이트된다
+- [x] **HUD-03**: 워터 티어 표시기(0~3단계)가 HUD에 표시되고 O키 전환 시 즉시 업데이트된다
 - [x] **HUD-04**: 플레이어 HP가 25% 이하일 때 화면 가장자리에 빨간 펄스/비네트 효과가 나타나 위험 상태를 알린다 (HP 바 없이 HP 값 기반으로 트리거)
 
 ### Enemy World Space UI
@@ -78,9 +78,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HUD-01 | Phase 1 | Pending |
+| HUD-01 | Phase 1 | Complete |
 | HUD-02 | Phase 1 | Pending |
-| HUD-03 | Phase 1 | Pending |
+| HUD-03 | Phase 1 | Complete |
 | HUD-04 | Phase 1 | Complete |
 | TECH-01 | Phase 1 | Complete |
 | ENM-01 | Phase 2 | Pending |
