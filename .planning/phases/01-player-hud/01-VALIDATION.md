@@ -45,7 +45,7 @@ created: 2026-03-30
 | SkillBase impl | 01 | 1 | TECH-01 | compile | SkillBase compiles; CooldownRemaining decrements during cooldown | ⬜ pending |
 | World Space HUD | 02 | 2 | HUD-01/02/03 | play | Bar appears next to player, flips on direction change | ⬜ pending |
 | Water bar fill | 02 | 2 | HUD-01 | play | Water bar decreases when SacrificeWater() called | ⬜ pending |
-| Corruption fill | 02 | 2 | HUD-02 | play | Corruption rises from bottom as player takes corruption damage | ⬜ pending |
+| Corruption fill | 02 | 2 | HUD-01 | play | Corruption rises from bottom as player takes corruption damage | ⬜ pending |
 | Tier orbs | 02 | 2 | HUD-03 | play | O key cycles orb count 0→1→2→3→0 | ⬜ pending |
 | Vignette stages | 03 | 3 | HUD-04 | play | Vignette appears at ratio 25/50/75% with correct colors | ⬜ pending |
 | Vignette pulse | 03 | 3 | HUD-04 | play | Pulse speed increases at each stage | ⬜ pending |
