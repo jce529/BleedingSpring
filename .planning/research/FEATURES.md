@@ -1,225 +1,225 @@
-# Feature Research
+# 기능 리서치
 
-**Domain:** Hardcore 2D Action Roguelike — UI System (Health/Resource Bars, HUD)
-**Researched:** 2026-03-27
-**Confidence:** HIGH (reference games well-documented through training data; no external search available but these are canonical, stable titles)
+**도메인:** 하드코어 2D 액션 로그라이크 — UI 시스템 (HP/리소스 바, HUD)
+**조사일:** 2026-03-27
+**신뢰도:** 높음 (참고 게임들은 훈련 데이터를 통해 잘 문서화됨; 외부 검색은 불가하지만 이것들은 안정적인 대표 타이틀)
 
 ---
 
-## Reference Game Analysis
+## 참고 게임 분석
 
-Before categorizing features, here is what the four reference games actually do — evidence-first.
+기능을 분류하기 전에 네 가지 참고 게임이 실제로 무엇을 하는지 — 증거 우선으로 살펴봅니다.
 
 ### Dead Cells
-- **Player HP:** Segmented bar (cells), top-left corner, Screen Space Overlay
-- **Player resource:** No visible mana; skills show cooldown as icon overlay (fill drain + timer)
-- **Enemy HP:** World-space thin bar above enemy head — appears only when enemy is damaged or in proximity
-- **Boss HP:** Large bottom-screen bar with boss name, Screen Space, appears on boss room entry
-- **Danger signal:** Screen edges pulse red at critical HP (~20%)
-- **Secondary resource tracking:** None visible in HUD during normal play
-- **Death condition:** HP = 0 only
+- **플레이어 HP:** 세그먼트 바 (셀), 좌상단, Screen Space Overlay
+- **플레이어 리소스:** 보이는 마나 없음; 스킬은 쿨다운을 아이콘 오버레이로 표시 (fill 감소 + 타이머)
+- **적 HP:** 적 머리 위의 월드 스페이스 얇은 바 — 적이 피해를 입거나 근접 시에만 나타남
+- **보스 HP:** 보스 이름이 있는 화면 하단 큰 바, Screen Space, 보스 방 진입 시 나타남
+- **위험 신호:** 위기 HP(~20%)에서 화면 가장자리가 빨갛게 펄스
+- **보조 리소스 추적:** 일반 플레이 중 HUD에 없음
+- **사망 조건:** HP = 0만
 
 ### Hades
-- **Player HP:** Bar bottom-left, discrete pip segments
-- **Player resource:** Dash charges as pips; cast charges as pips; no traditional mana bar
-- **Enemy HP:** No bars on regular enemies
-- **Boss HP:** Full-width bottom-screen bar with boss name, phase transition tick-marks (thin vertical lines at phase thresholds), Screen Space
-- **Danger signal:** Screen vignette darkens and reddens at low HP; controller rumble
-- **Death condition:** HP = 0 only
+- **플레이어 HP:** 좌하단 바, 이산 핍 세그먼트
+- **플레이어 리소스:** 대시 충전 핍; 캐스트 충전 핍; 전통적인 마나 바 없음
+- **적 HP:** 일반 적에 바 없음
+- **보스 HP:** 보스 이름과 페이즈 전환 틱 마크가 있는 전체 너비 화면 하단 바, Screen Space
+- **위험 신호:** 낮은 HP에서 화면 비네트가 어둡고 붉어짐; 컨트롤러 진동
+- **사망 조건:** HP = 0만
 
 ### Hollow Knight
-- **Player HP:** Discrete mask icons (not a bar), top-left
-- **Player resource:** Soul meter as circular gauge adjacent to masks, fills from enemy hits
-- **Enemy HP:** No bars on any enemy (including mini-bosses)
-- **Boss HP:** Segmented bar at screen bottom, appears on boss room seal
-- **Danger signal:** Screen flash + audio sting on hit; no persistent low-HP indicator
-- **Death condition:** HP = 0 (all masks gone) only
+- **플레이어 HP:** 이산 마스크 아이콘 (바 아님), 좌상단
+- **플레이어 리소스:** 마스크 옆 원형 게이지 소울 미터, 적 타격 시 채워짐
+- **적 HP:** 어떤 적에도 바 없음 (미니보스 포함)
+- **보스 HP:** 화면 하단 세그먼트 바, 보스 방 봉인 시 나타남
+- **위험 신호:** 타격 시 화면 플래시 + 오디오; 지속적인 낮은 HP 표시 없음
+- **사망 조건:** HP = 0 (모든 마스크 소멸)만
 
 ### Enter the Gungeon
-- **Player HP:** Heart icons, top-left; armor as shield icons
-- **Enemy HP:** No bars on any enemy
-- **Boss HP:** Bar at top of screen with boss name; phase markers as tick lines
-- **Danger signal:** Screen shake on hits; no persistent low-HP indicator
-- **Death condition:** HP = 0 only
+- **플레이어 HP:** 하트 아이콘, 좌상단; 방어구는 실드 아이콘
+- **적 HP:** 어떤 적에도 바 없음
+- **보스 HP:** 보스 이름과 위상 마커 틱 라인이 있는 화면 상단 바
+- **위험 신호:** 타격 시 화면 흔들림; 지속적인 낮은 HP 표시 없음
+- **사망 조건:** HP = 0만
 
-### Cross-Genre Pattern: "Danger Zone" Visualization
-None of the four reference games display a **target range** on a status bar. The closest mechanic is Hades/Gungeon boss bars using **threshold tick marks** (thin vertical lines) to indicate phase transitions — but these mark thresholds to cross, not a range to stop within.
+### 장르 교차 패턴: "위험 구간" 시각화
+네 가지 참고 게임 중 어느 것도 상태 바에 **목표 범위**를 표시하지 않습니다. 가장 가까운 메카닉은 Hades/Gungeon 보스 바가 페이즈 전환을 나타내기 위해 **임계값 틱 마크**(얇은 세로선)를 사용하는 것이지만 — 이것들은 통과해야 할 임계값을 표시하는 것이지 멈춰야 할 범위가 아닙니다.
 
-This means **Bleeding Spring's Sweet Spot highlighted range on the enemy corruption bar is a genuinely novel UI pattern.** There is no direct genre precedent to copy. The design decision documented in PROJECT.md (color-band on the bar) is the right call — it is the most legible approach for a novel mechanic.
+이는 **Bleeding Spring의 적 오염도 바의 Sweet Spot 하이라이트 범위가 진정으로 새로운 UI 패턴임을 의미합니다.** 직접적인 장르 선례가 없습니다. PROJECT.md에 문서화된 디자인 결정 (바 위 색상 밴드)이 올바른 선택입니다 — 새로운 메카닉에 가장 읽기 쉬운 접근법입니다.
 
 ---
 
-## Feature Landscape
+## 기능 지형
 
-### Table Stakes (Players Expect These)
+### 기본 요구사항 (플레이어가 기대하는 것)
 
-Features a hardcore action roguelike player assumes exist. Missing these = product feels broken or unfinished.
+하드코어 액션 로그라이크 플레이어가 당연히 있을 것으로 가정하는 기능들. 이것들이 없으면 = 제품이 망가지거나 미완성으로 느껴집니다.
 
-| Feature | Why Expected | Complexity | Notes |
+| 기능 | 기대되는 이유 | 복잡도 | 참고 |
 |---------|--------------|------------|-------|
-| Player HP bar (맑은 물) | Every action game has a visible HP indicator; Dead Cells, Hades all show it | LOW | `Image.fillAmount` driven by `OnWaterChanged` event already wired in `PlayerWaterStats` |
-| Skill cooldown display | Dead Cells established icon-overlay cooldown as genre standard; players expect to know when skills are ready | MEDIUM | 3 skills, each needs icon + cooldown fill + optional timer text; must wire to `ISkill` cooldown state |
-| Boss HP bar (Screen Space) | All four reference games have a dedicated full-screen-width boss bar; absence feels like a missing feature | MEDIUM | Needs boss detection trigger (enter boss room / flag on enemy); separate Canvas in Screen Space - Camera or Overlay |
-| Critical HP danger signal | Genre standard: red vignette or screen-edge pulse at low HP informs player danger state without requiring them to look at a corner bar | LOW | Post-process vignette (URP 2D supports via Full Screen Pass Renderer Feature) or a simple screen-edge Image; threshold ~20-25% |
-| Enemy world-space HP bar | Dead Cells uses these; players in action games want to know roughly how much health an enemy has | MEDIUM | World Space Canvas per enemy, follows enemy transform; show only when enemy is damaged or targeted |
-| Death condition clarity (HP=0) | Players must understand that HP reaching zero is fatal; standard across all genre references | LOW | Visual feedback on death (screen flash, game over) already partially handled by `GameStateManager`; no special bar needed beyond HP bar reaching zero |
+| 플레이어 HP 바 (맑은 물) | 모든 액션 게임에는 보이는 HP 표시기가 있음; Dead Cells, Hades 모두 표시 | 낮음 | `PlayerWaterStats`의 `OnWaterChanged` 이벤트로 구동되는 `Image.fillAmount` |
+| 스킬 쿨다운 표시 | Dead Cells가 아이콘 오버레이 쿨다운을 장르 표준으로 확립; 플레이어는 스킬 준비 여부를 알기 원함 | 중간 | 3개 스킬, 각각 아이콘 + 쿨다운 fill + 선택적 타이머 텍스트 필요; `ISkill` 쿨다운 상태에 연결 필요 |
+| 보스 HP 바 (Screen Space) | 네 가지 참고 게임 모두 전용 전체 너비 보스 바를 가짐; 없으면 빠진 기능처럼 느껴짐 | 중간 | 보스 감지 트리거 필요 (보스 방 진입 / 적의 플래그); Screen Space - Camera 또는 Overlay의 별도 캔버스 |
+| 위기 HP 위험 신호 | 장르 표준: 낮은 HP에서 빨간 비네트 또는 화면 가장자리 펄스로 플레이어가 코너 바를 보지 않아도 위험 상태를 알 수 있음 | 낮음 | URP 2D 포스트 프로세스 비네트 (Full Screen Pass Renderer Feature 통해) 또는 단순 화면 가장자리 Image; 임계값 ~20-25% |
+| 적 월드 스페이스 HP 바 | Dead Cells 사용; 액션 게임의 플레이어는 적이 대략 얼마나 남았는지 알고 싶어 함 | 중간 | 적 프리팹별 월드 스페이스 캔버스, 적 transform 추적; 피해 시 또는 타겟팅 시에만 표시 |
+| 사망 조건 명확성 (HP=0) | 플레이어는 HP가 0이 되면 치명적임을 이해해야 함; 모든 장르 참고에서 표준 | 낮음 | 사망 시 시각적 피드백 (화면 플래시, 게임오버)이 `GameStateManager`에 의해 이미 부분 처리됨; HP 바가 0에 도달하는 것 이상의 특별한 바 불필요 |
 
-### Differentiators (Bleeding Spring's Competitive Advantage)
+### 차별화 요소 (Bleeding Spring의 경쟁 우위)
 
-Features unique to this game's design. These are where the UI must do extra work because no reference game shows the player how to do this.
+이 게임 디자인에 고유한 기능들. UI가 추가 작업을 해야 하는 곳이며, 어떤 참고 게임도 이것을 플레이어에게 보여주지 않기 때문입니다.
 
-| Feature | Value Proposition | Complexity | Notes |
+| 기능 | 가치 제안 | 복잡도 | 참고 |
 |---------|-------------------|------------|-------|
-| Enemy Corruption bar with Sweet Spot highlighted range | The core mechanic — player reads enemy corruption state and decides to kill now (purify) or wait; no genre precedent means the UI must be completely self-teaching | HIGH | Single `Image` with a custom colored overlay or shader segment for the sweet-spot band; driven by `EnemyStats.sweetSpotMin/Max` per enemy type; must be instantly readable at a glance during fast combat |
-| Player Corruption bar (오염도) as a death-threat indicator | A second death axis (Corruption >= 100% = instant death) that no reference game has; players conditioned to only watch HP must also watch this | MEDIUM | Distinct visual treatment from HP bar — different color, different position, or an alarming visual change as it approaches 100%; the bar itself is table stakes but its **alarming behavior** is a differentiator |
-| Corruption bar "danger zone" (player-side, approaching 100%) | Analogous to red screen edge for HP, but for the corruption axis; players must feel escalating tension as corruption climbs | LOW-MEDIUM | Color shift on the bar fill (green → yellow → red as corruption increases) or pulsing animation above 80%; more impactful than a simple static bar |
-| Water Tier indicator (0-3 단계) | Directly affects skill damage and corruption output; no reference game has a tiered resource modifier visible in HUD | LOW | 4-state display (0/1/2/3); icon strip, number overlay, or segmented pip row; wired to O-key tier switch in existing `PlayerWaterStats` |
-| Sweet Spot purification result feedback | After killing an enemy, player needs immediate confirmation that they hit the Sweet Spot (Purified vs Destroyed); this reinforces the strategic loop | MEDIUM | World-space popup text or icon stamp (PURIFIED / DESTROYED) over enemy position on death; driven by existing purification result event in `EnemyStats` |
-| Dual death condition visualization | HP=0 OR Corruption>=100% — players need to understand two death axes exist; no reference game has this | LOW | Corruption bar reaching 100% should have a distinct "full/critical" visual (e.g., flashing red fill or screen-edge corruption tint) that mirrors HP danger signaling |
+| Sweet Spot 하이라이트 범위가 있는 적 오염도 바 | 핵심 메카닉 — 플레이어가 적의 오염 상태를 읽고 지금 죽일지(정화) 기다릴지 결정; 장르 선례 없음은 UI가 완전히 자가 교습이어야 함을 의미 | 높음 | Sweet Spot 밴드를 위한 커스텀 색상 오버레이 또는 셰이더 세그먼트가 있는 단일 `Image`; 적 유형별 `EnemyStats.sweetSpotMin/Max`로 구동; 빠른 전투 중 한 눈에 즉시 읽을 수 있어야 함 |
+| 사망 위협 표시기로서의 플레이어 오염도 바 (오염도) | 두 번째 사망 축 (오염도 >= 100% = 즉사) — 어떤 참고 게임도 없음; HP만 보도록 훈련된 플레이어가 이것도 봐야 함 | 중간 | HP 바와 다른 시각적 처리 — 다른 색상, 다른 위치, 또는 100%에 근접할 때 경고 시각 변화; 바 자체는 기본 요구사항이지만 **경고 동작**이 차별화 요소 |
+| 오염도 바 "위험 구간" (플레이어 측, 100% 근접) | HP의 빨간 화면 가장자리와 유사하지만 오염도 축; 플레이어는 오염이 오를수록 고조되는 긴장감을 느껴야 함 | 낮음-중간 | 바 fill의 색상 변화 (오염도 증가에 따라 녹색 → 노란색 → 빨간색) 또는 80% 이상에서 펄스 애니메이션; 단순한 정적 바보다 더 임팩트 있음 |
+| 워터 티어 표시기 (0-3 단계) | 스킬 데미지와 오염도 출력에 직접 영향; 어떤 참고 게임도 HUD에 티어 리소스 수정자를 보이지 않음 | 낮음 | 4상태 표시 (0/1/2/3); 아이콘 스트립, 숫자 오버레이, 또는 세그먼트 핍 행; 기존 `PlayerWaterStats`의 O키 티어 전환에 연결 |
+| Sweet Spot 정화 결과 피드백 | 적을 죽인 후 플레이어는 Sweet Spot을 맞췄는지 즉각적인 확인이 필요 (정화 vs 파괴); 전략적 루프를 강화 | 중간 | 사망 시 적 위치에 월드 스페이스 팝업 텍스트 또는 아이콘 스탬프 (정화/파괴); 기존 `EnemyStats`의 정화 결과 이벤트로 구동 |
+| 이중 사망 조건 시각화 | HP=0 또는 오염도>=100% — 플레이어는 두 사망 축이 존재한다는 것을 이해해야 함; 어떤 참고 게임도 없음 | 낮음 | 오염도 바가 100%에 도달하면 HP 위험 신호를 미러링하는 뚜렷한 "가득/위기" 시각적 표시 (예: 빨간 fill 깜빡임 또는 화면 가장자리 오염 색조)가 있어야 함 |
 
-### Anti-Features (Do Not Build at This Stage)
+### 구현하지 말 것 (이 단계에서)
 
-Features that seem reasonable but create scope/complexity problems without delivering proportional value for this milestone.
+합리적으로 보이지만 이 마일스톤에서 비례적인 가치 없이 범위/복잡도 문제를 만드는 기능들.
 
-| Feature | Why Requested | Why Problematic | Alternative |
+| 기능 | 요청되는 이유 | 문제점 | 대안 |
 |---------|---------------|-----------------|-------------|
-| Animated HP drain with ghost/lag trail (e.g., yellow trailing bar behind red fill) | Looks polished; used in some RPGs and Soulsborne games | Requires a secondary Image tracking "previous HP" with a lerp, adds visual complexity, and can obscure the Sweet Spot band on enemy corruption bars in world-space; adds implementation time without contributing to readability of the core mechanic | Simple immediate fill update; add trail animation in a polish pass after core UI is validated |
-| Numerical HP/Corruption readout alongside bars | Players sometimes want exact numbers | In a fast-paced action game, numbers are not read in combat; they add visual noise near enemy bars where Sweet Spot visualization needs to be clean | Show numbers only on the player HUD tooltip or pause screen if requested later |
-| Floating damage numbers | Common in ARPGs and roguelikes; often requested | Significant implementation work (pooled text objects, trajectory animation); not in scope for UI system milestone; can conflict visually with world-space enemy bars | Defer to gameplay feedback pass in Phase 2+ |
-| Minimap or room map | Genre staple in dungeon-crawlers | Requires room/map system which is explicitly Phase 2+ in PROJECT.md; has zero dependencies that are built in Phase 1 | Out of scope; build when dungeon room structure exists |
-| Status effect icons on enemy bars | Useful for games with many debuffs | No status effect system exists in the current codebase; would require building an entire status system to populate | No status system in scope; defer completely |
-| Scrolling/animated boss HP bar reveal (cinematic) | Hades-style dramatic bar entrance animation | Adds implementation time disproportionate to milestone; core readability of the boss bar is the actual need | Static bar that appears instantly on boss encounter is sufficient; add entrance animation as a polish pass |
+| 고스트/지연 트레일이 있는 애니메이션 HP 감소 (예: 빨간 fill 뒤의 노란 트레일 바) | 세련되어 보임; 일부 RPG와 Soulsborne 게임에서 사용됨 | "이전 HP"를 lerp로 추적하는 보조 Image가 필요하고, 시각적 복잡도를 추가하며, 월드 스페이스 적 오염도 바의 Sweet Spot 밴드를 가릴 수 있음; 핵심 메카닉의 가독성 기여 없이 구현 시간 추가 | 즉각적인 fill 업데이트; 핵심 UI 검증 후 폴리시 패스에서 트레일 애니메이션 추가 |
+| 바 옆 수치 HP/오염도 읽기 | 플레이어가 때로 정확한 숫자를 원함 | 빠른 페이스의 액션 게임에서 전투 중 숫자는 읽히지 않음; Sweet Spot 시각화가 깔끔해야 하는 적 바 근처에 시각적 노이즈 추가 | 나중에 요청되면 플레이어 HUD 툴팁이나 일시정지 화면에서만 숫자 표시 |
+| 플로팅 데미지 숫자 | ARPG와 로그라이크에서 일반적; 자주 요청됨 | 상당한 구현 작업 (풀링된 텍스트 객체, 궤도 애니메이션); 이 UI 시스템 마일스톤 범위 밖; 월드 스페이스 적 바와 시각적으로 충돌 가능 | 게임플레이 피드백 패스 Phase 2+로 연기 |
+| 미니맵 또는 방 지도 | 던전 크롤러의 장르 표준 | 방/지도 시스템 필요 — PROJECT.md에서 명시적으로 Phase 2+; Phase 1에서 구축된 의존성 없음 | 범위 밖; 던전 방 구조가 존재할 때 구축 |
+| 적 바의 상태 효과 아이콘 | 많은 디버프가 있는 게임에서 유용 | 현재 코드베이스에 상태 효과 시스템 없음; 아이콘 표시를 위해 전체 상태 시스템 구축 필요 | 범위에 상태 시스템 없음; 완전히 연기 |
+| 스크롤/애니메이션 보스 HP 바 공개 (시네마틱) | Hades 스타일의 극적인 바 등장 애니메이션 | 마일스톤 대비 구현 시간 불균형; 보스 바의 핵심 가독성이 실제 필요 | 보스 만남 시 즉시 나타나는 정적 바로 충분; 폴리시 패스에서 등장 애니메이션 추가 |
 
 ---
 
-## Feature Dependencies
+## 기능 의존성
 
 ```
-[Player HP Bar]
-    └──requires──> [PlayerWaterStats.OnWaterChanged event] (already exists)
+[플레이어 HP 바]
+    └──필요──> [PlayerWaterStats.OnWaterChanged 이벤트] (이미 존재)
 
-[Player Corruption Bar]
-    └──requires──> [PlayerWaterStats.OnCorruptionChanged event] (already exists)
-    └──enhances──> [Corruption Danger Zone Visual] (color shift/pulse overlay on same bar)
+[플레이어 오염도 바]
+    └──필요──> [PlayerWaterStats.OnCorruptionChanged 이벤트] (이미 존재)
+    └──향상──> [오염도 위험 구간 시각화] (같은 바의 색상 변화/펄스 오버레이)
 
-[Water Tier Indicator]
-    └──requires──> [PlayerWaterStats tier value + tier change event] (exists, needs event confirmation)
+[워터 티어 표시기]
+    └──필요──> [PlayerWaterStats 티어 값 + 티어 변경 이벤트] (존재, 이벤트 확인 필요)
 
-[Skill Cooldown Display]
-    └──requires──> [ISkill.IsOnCooldown / cooldown progress accessor] (interface may need extension)
-    └──requires──> [Skill icon assets per skill] (art dependency)
+[스킬 쿨다운 표시]
+    └──필요──> [ISkill.IsOnCooldown / 쿨다운 진행 접근자] (인터페이스 확장 필요할 수 있음)
+    └──필요──> [스킬별 스킬 아이콘 에셋] (아트 의존성)
 
-[Enemy World-Space HP Bar]
-    └──requires──> [EnemyStats.OnDamaged / current HP accessor] (already exists via IDamageable)
-    └──requires──> [World Space Canvas attached to enemy prefab]
+[적 월드 스페이스 HP 바]
+    └──필요──> [EnemyStats.OnDamaged / 현재 HP 접근자] (IDamageable을 통해 이미 존재)
+    └──필요──> [적 프리팹에 부착된 월드 스페이스 캔버스]
 
-[Enemy Corruption Bar + Sweet Spot Band]
-    └──requires──> [Enemy World-Space HP Bar Canvas] (same Canvas, additional bar below)
-    └──requires──> [EnemyStats.sweetSpotMin, sweetSpotMax values accessible] (must verify exposed)
-    └──requires──> [EnemyStats.OnCorruptionChanged event] (already exists)
+[적 오염도 바 + Sweet Spot 밴드]
+    └──필요──> [적 월드 스페이스 HP 바 캔버스] (같은 캔버스, 아래 추가 바)
+    └──필요──> [EnemyStats.sweetSpotMin, sweetSpotMax 값 접근 가능] (노출 여부 확인 필요)
+    └──필요──> [EnemyStats.OnCorruptionChanged 이벤트] (이미 존재)
 
-[Sweet Spot Purification Result Feedback]
-    └──requires──> [Enemy World-Space bars] (uses same world position)
-    └──requires──> [EnemyStats purification result event on death] (must verify exists or add)
+[Sweet Spot 정화 결과 피드백]
+    └──필요──> [적 월드 스페이스 바] (같은 월드 위치 사용)
+    └──필요──> [사망 시 EnemyStats 정화 결과 이벤트] (존재 여부 확인 또는 추가 필요)
 
-[Boss HP Bar (Screen Space)]
-    └──requires──> [Boss detection mechanism — flag on EnemyStats or separate BossEnemy component]
-    └──requires──> [Screen Space Canvas (separate from world-space enemy Canvas)]
-    └──conflicts──> [Enemy World-Space HP Bar] (boss should NOT also have world-space bar; one or the other)
+[보스 HP 바 (Screen Space)]
+    └──필요──> [보스 감지 메커니즘 — EnemyStats의 플래그 또는 별도 BossEnemy 컴포넌트]
+    └──필요──> [Screen Space 캔버스 (적 월드 스페이스 캔버스와 별도)]
+    └──충돌──> [적 월드 스페이스 HP 바] (보스에는 월드 스페이스 바 없어야 함; 둘 중 하나)
 
-[Critical HP Danger Signal (vignette/screen edge)]
-    └──requires──> [Player HP Bar] (same data source, threshold trigger)
-    └──enhances──> [Player HP Bar] (reinforces low-HP state)
+[위기 HP 위험 신호 (비네트/화면 가장자리)]
+    └──필요──> [플레이어 HP 바] (같은 데이터 소스, 임계값 트리거)
+    └──향상──> [플레이어 HP 바] (낮은 HP 상태 강화)
 
-[Dual Death Condition Visualization]
-    └──requires──> [Player HP Bar] + [Player Corruption Bar] (both must be present first)
+[이중 사망 조건 시각화]
+    └──필요──> [플레이어 HP 바] + [플레이어 오염도 바] (둘 다 먼저 있어야 함)
 ```
 
-### Dependency Notes
+### 의존성 참고사항
 
-- **Enemy Corruption Bar requires Sweet Spot values exposed:** `EnemyStats` must expose `sweetSpotMin` and `sweetSpotMax` as accessible floats (not just used internally). Verify this before implementation; may need a getter or property addition.
-- **Skill Cooldown Display may require ISkill extension:** The existing `ISkill` interface needs a `CooldownProgress` (0-1 float) or `RemainingCooldown` property for the UI to poll or subscribe to. This is a small interface change but touches all 3 skill implementations.
-- **Boss bar conflicts with world-space bar:** A boss enemy should disable the world-space Canvas component when the Screen Space boss bar activates. Needs a coordinator (e.g., `BossUIController`) that listens for boss encounter start.
-- **Sweet Spot Purification Feedback requires a death-result event:** `EnemyStats` must fire an event carrying `PurificationResult` (Purified/Destroyed) on death. Verify this exists; if not, add it before building the feedback UI.
-
----
-
-## MVP Definition
-
-### Launch With (this milestone — Phase 1 UI System)
-
-Minimum required to make the core gameplay readable and playable.
-
-- [ ] Player HP bar (맑은 물) — without this, the primary death condition is invisible
-- [ ] Player Corruption bar (오염도) with danger coloring approaching 100% — second death axis must be legible
-- [ ] Water Tier indicator — tier directly changes skill behavior; player must always know current tier
-- [ ] Skill cooldown display — players cannot use skills strategically without knowing cooldown state
-- [ ] Enemy world-space HP bar (appears on damage) — confirms hits and shows enemy health state
-- [ ] Enemy corruption bar with Sweet Spot highlighted band — this IS the core mechanic; without it the game's differentiating loop is invisible to the player
-- [ ] Boss Screen Space HP bar — genre expectation; boss fights without a dedicated bar feel unpolished
-- [ ] Critical HP danger signal (screen vignette or edge pulse) — supports reading player danger state during fast combat
-
-### Add After Validation (v1.x — polish pass)
-
-- [ ] Sweet Spot purification result feedback (PURIFIED / DESTROYED popup) — confirms strategic decision; add after verifying core bars work correctly in combat
-- [ ] Corruption bar max-fill alarm (flashing at 100%) — reinforces dual death condition; add after base bars validated
-- [ ] Skill icon art — replace placeholder with actual Aseprite assets once art pipeline is confirmed working
-
-### Future Consideration (Phase 2+)
-
-- [ ] Purification/Destruction counter display — needs Phase 2 story branching system to make it meaningful
-- [ ] Run summary screen — needs Phase 2 run structure
-- [ ] Animated HP ghost/trail — pure polish; defer until core is stable
-- [ ] Floating damage numbers — Phase 2+ gameplay feedback pass
+- **적 오염도 바는 Sweet Spot 값 노출 필요:** `EnemyStats`는 `sweetSpotMin`과 `sweetSpotMax`를 접근 가능한 float로 노출해야 합니다 (내부적으로만 사용되지 않고). 구현 전에 확인; getter나 프로퍼티 추가 필요할 수 있음.
+- **스킬 쿨다운 표시는 ISkill 확장 필요할 수 있음:** 기존 `ISkill` 인터페이스에 UI가 폴링하거나 구독할 `CooldownProgress` (0-1 float) 또는 `RemainingCooldown` 프로퍼티가 필요합니다. 작은 인터페이스 변경이지만 3개의 스킬 구현 모두에 영향.
+- **보스 바는 월드 스페이스 바와 충돌:** 보스 적은 Screen Space 보스 바가 활성화될 때 월드 스페이스 Canvas 컴포넌트를 비활성화해야 합니다. 보스 만남 시작을 듣는 코디네이터 (예: `BossUIController`) 필요.
+- **Sweet Spot 정화 피드백은 사망 결과 이벤트 필요:** `EnemyStats`가 사망 시 `PurificationResult`(정화/파괴)를 전달하는 이벤트를 발생시켜야 합니다. 존재 여부 확인; 없으면 피드백 UI 구축 전에 추가.
 
 ---
 
-## Feature Prioritization Matrix
+## MVP 정의
 
-| Feature | Player Value | Implementation Cost | Priority |
+### 이번 마일스톤에 포함 (Phase 1 UI 시스템)
+
+핵심 게임플레이를 읽을 수 있고 플레이 가능하게 만들기 위한 최소 요구사항.
+
+- [ ] 플레이어 HP 바 (맑은 물) — 없으면 1차 사망 조건이 보이지 않음
+- [ ] 100% 근접 위험 색상의 플레이어 오염도 바 — 2차 사망 축이 읽혀야 함
+- [ ] 워터 티어 표시기 — 티어가 스킬 동작을 직접 변경; 플레이어는 항상 현재 티어 알아야 함
+- [ ] 스킬 쿨다운 표시 — 쿨다운 상태를 모르면 전략적 스킬 사용 불가
+- [ ] 적 월드 스페이스 HP 바 (피해 시 나타남) — 타격 확인 및 적 상태 표시
+- [ ] Sweet Spot 하이라이트 밴드가 있는 적 오염도 바 — 이것이 핵심 메카닉; 없으면 정화/파괴 루프가 플레이어에게 보이지 않음
+- [ ] 보스 Screen Space HP 바 — 장르 기대; 전용 바 없는 보스 전투는 미완성으로 느껴짐
+- [ ] 위기 HP 위험 신호 (화면 비네트 또는 가장자리 펄스) — 빠른 전투 중 플레이어 위험 상태 읽기 지원
+
+### 검증 후 추가 (v1.x — 폴리시 패스)
+
+- [ ] Sweet Spot 정화 결과 피드백 (정화/파괴 팝업) — 전략적 결정 확인; 핵심 바가 전투에서 올바르게 작동하는지 확인 후 추가
+- [ ] 오염도 바 최대 fill 알람 (100%에서 깜빡임) — 이중 사망 조건 강화; 기본 바 검증 후 추가
+- [ ] 스킬 아이콘 아트 — 아트 파이프라인 확인 후 Aseprite 에셋으로 플레이스홀더 교체
+
+### 미래 고려사항 (Phase 2+)
+
+- [ ] 정화/파괴 카운터 표시 — Phase 2 스토리 분기 시스템이 있어야 의미 있음
+- [ ] 런 요약 화면 — Phase 2 런 구조 필요
+- [ ] 애니메이션 HP 고스트/트레일 — 순수 폴리시; 핵심 안정화 후 연기
+- [ ] 플로팅 데미지 숫자 — Phase 2+ 게임플레이 피드백 패스
+
+---
+
+## 기능 우선순위 매트릭스
+
+| 기능 | 플레이어 가치 | 구현 비용 | 우선순위 |
 |---------|--------------|---------------------|----------|
-| Enemy Corruption Bar + Sweet Spot Band | HIGH — core mechanic visibility | HIGH — novel UI pattern, no direct reference | P1 |
-| Player HP Bar | HIGH — primary death axis | LOW — standard fill bar + existing event | P1 |
-| Player Corruption Bar with danger coloring | HIGH — secondary death axis | LOW-MEDIUM — bar is simple; danger coloring adds small cost | P1 |
-| Skill Cooldown Display | HIGH — tactical decision requires this | MEDIUM — needs ISkill interface extension | P1 |
-| Enemy World-Space HP Bar | HIGH — combat feedback | MEDIUM — World Space Canvas per enemy prefab | P1 |
-| Boss Screen Space HP Bar | MEDIUM-HIGH — genre expectation | MEDIUM — needs boss detection mechanism | P1 |
-| Water Tier Indicator | MEDIUM — affects skill behavior | LOW — 4-state display, event already wired | P1 |
-| Critical HP Danger Signal | MEDIUM — combat readability aid | LOW — URP vignette or screen-edge Image | P2 |
-| Sweet Spot Purification Result Feedback | MEDIUM — reinforces strategic loop | MEDIUM — pooled world-space popup system | P2 |
-| Corruption Bar Max-Fill Alarm | MEDIUM — dual death condition clarity | LOW — animation/color on existing bar | P2 |
+| 적 오염도 바 + Sweet Spot 밴드 | 높음 — 핵심 메카닉 가시성 | 높음 — 새로운 UI 패턴, 직접 참고 없음 | P1 |
+| 플레이어 HP 바 | 높음 — 1차 사망 축 | 낮음 — 표준 fill 바 + 기존 이벤트 | P1 |
+| 위험 색상의 플레이어 오염도 바 | 높음 — 2차 사망 축 | 낮음-중간 — 바는 단순; 위험 색상이 약간의 비용 추가 | P1 |
+| 스킬 쿨다운 표시 | 높음 — 이것 없이는 전술적 결정 불가 | 중간 — ISkill 인터페이스 확장 필요 | P1 |
+| 적 월드 스페이스 HP 바 | 높음 — 전투 피드백 | 중간 — 적 프리팹별 월드 스페이스 캔버스 | P1 |
+| 보스 Screen Space HP 바 | 중간-높음 — 장르 기대 | 중간 — 보스 감지 메커니즘 필요 | P1 |
+| 워터 티어 표시기 | 중간 — 스킬 동작에 영향 | 낮음 — 4상태 표시, 이벤트 이미 연결 | P1 |
+| 위기 HP 위험 신호 | 중간 — 전투 가독성 보조 | 낮음 — URP 비네트 또는 화면 가장자리 Image | P2 |
+| Sweet Spot 정화 결과 피드백 | 중간 — 전략적 루프 강화 | 중간 — 풀링된 월드 스페이스 팝업 시스템 | P2 |
+| 오염도 바 최대 fill 알람 | 중간 — 이중 사망 조건 명확성 | 낮음 — 기존 바의 애니메이션/색상 | P2 |
 
-**Priority key:**
-- P1: Required for this milestone — gameplay is unreadable without it
-- P2: Add in same milestone if time allows, or in first patch
-- P3: Future milestone
+**우선순위 키:**
+- P1: 이 마일스톤에 필수 — 없으면 게임플레이를 읽을 수 없음
+- P2: 시간이 허락하면 같은 마일스톤에, 또는 첫 번째 패치에 추가
+- P3: 미래 마일스톤
 
 ---
 
-## Competitor Feature Analysis
+## 경쟁사 기능 분석
 
-| Feature | Dead Cells | Hades | Hollow Knight | Enter the Gungeon | Bleeding Spring Approach |
+| 기능 | Dead Cells | Hades | Hollow Knight | Enter the Gungeon | Bleeding Spring 접근법 |
 |---------|------------|-------|---------------|-------------------|--------------------------|
-| Player HP display | Segmented bar, top-left | Bar + pip segments, bottom-left | Discrete mask icons, top-left | Heart icons, top-left | Bar (맑은 물), Screen Space — continuous fill is better for second-by-second combat skill use |
-| Secondary resource | None visible (scrolls are pickups) | Dash/cast charge pips | Soul meter circular gauge | Armor shield icons | Corruption bar — distinct visual treatment; must not look like a "fill up to use" resource — it's a danger meter |
-| Enemy HP bar | World-space, above head | None on regular enemies | None | None | World-space bar — follow Dead Cells; corruption mechanic requires players to watch enemy state closely |
-| Boss HP bar | Bottom screen, full width | Bottom screen, full width, phase ticks | Bottom screen, segmented | Top screen | Bottom screen, full width — genre convention; top causes eye travel conflict with player HUD |
-| Skill cooldown | Icon fill drain overlay | Separate ability icons with cooldown | None (no cooldowns) | None | Icon + cooldown fill; 3 skills need clear individual status |
-| Danger zone on bar | None | Phase tick marks on boss bar (thresholds, not ranges) | None | Phase tick marks on boss bar | Color-band segment on enemy corruption bar — genre-first design; no reference exists, so clarity of implementation is critical |
-| Critical HP signal | Screen edge red pulse | Screen vignette darkens | Screen flash on hit only | Screen shake | Screen edge vignette/pulse — follow Dead Cells/Hades standard |
+| 플레이어 HP 표시 | 세그먼트 바, 좌상단 | 바 + 핍 세그먼트, 좌하단 | 이산 마스크 아이콘, 좌상단 | 하트 아이콘, 좌상단 | 바 (맑은 물), Screen Space — 연속 fill이 초단위 전투 스킬 사용에 더 좋음 |
+| 보조 리소스 | 없음 (스크롤은 픽업) | 대시/캐스트 충전 핍 | 원형 게이지 소울 미터 | 방어구 실드 아이콘 | 오염도 바 — 뚜렷한 시각적 처리; "채워서 사용" 리소스처럼 보이면 안 됨 — 위험 미터임 |
+| 적 HP 바 | 월드 스페이스, 머리 위 | 일반 적에 없음 | 없음 | 없음 | 월드 스페이스 바 — Dead Cells 따름; 오염 메카닉은 플레이어가 적 상태를 주의 깊게 보아야 함 |
+| 보스 HP 바 | 하단 화면, 전체 너비 | 하단 화면, 전체 너비, 페이즈 틱 | 하단 화면, 세그먼트 | 상단 화면 | 하단 화면, 전체 너비 — 장르 관례; 상단은 플레이어 HUD와 시선 충돌 |
+| 스킬 쿨다운 | 아이콘 fill 감소 오버레이 | 별도 능력 아이콘과 쿨다운 | 없음 (쿨다운 없음) | 없음 | 아이콘 + 쿨다운 fill; 3개 스킬에 명확한 개별 상태 필요 |
+| 바의 위험 구간 | 없음 | 보스 바의 페이즈 틱 마크 (임계값, 범위 아님) | 없음 | 보스 바의 페이즈 틱 마크 | 적 오염도 바의 색상 밴드 세그먼트 — 장르 최초 디자인; 참고 없으므로 구현의 명확성이 중요 |
+| 위기 HP 신호 | 화면 가장자리 빨간 펄스 | 화면 비네트 어두워짐 | 타격 시만 화면 플래시 | 화면 흔들림 | 화면 가장자리 비네트/펄스 — Dead Cells/Hades 표준 따름 |
 
 ---
 
-## Sources
+## 출처
 
-- Dead Cells (Motion Twin, 2018): UI analysis from training data — HIGH confidence
-- Hades (Supergiant Games, 2020): UI analysis from training data — HIGH confidence
-- Hollow Knight (Team Cherry, 2017): UI analysis from training data — HIGH confidence
-- Enter the Gungeon (Dodge Roll, 2016): UI analysis from training data — HIGH confidence
-- Unity UGUI documentation: `Image.fillAmount`, World Space Canvas, Screen Space - Overlay patterns — HIGH confidence (well-established Unity patterns)
-- No external search was available during this research session; all findings are from training data (knowledge cutoff August 2025). Reference games are mature, stable titles — confidence in their UI patterns is HIGH.
+- Dead Cells (Motion Twin, 2018): 훈련 데이터의 UI 분석 — 높은 신뢰도
+- Hades (Supergiant Games, 2020): 훈련 데이터의 UI 분석 — 높은 신뢰도
+- Hollow Knight (Team Cherry, 2017): 훈련 데이터의 UI 분석 — 높은 신뢰도
+- Enter the Gungeon (Dodge Roll, 2016): 훈련 데이터의 UI 분석 — 높은 신뢰도
+- Unity UGUI 문서: `Image.fillAmount`, 월드 스페이스 캔버스, Screen Space - Overlay 패턴 — 높은 신뢰도 (잘 확립된 Unity 패턴)
+- 이 연구 세션 중 외부 검색 불가; 모든 결과는 훈련 데이터 기반 (지식 컷오프 2025년 8월). 참고 게임들은 성숙하고 안정적인 타이틀 — UI 패턴 신뢰도 높음.
 
 ---
 
-*Feature research for: Bleeding Spring — UI System milestone (Phase 1)*
-*Researched: 2026-03-27*
+*기능 리서치 대상: Bleeding Spring — UI 시스템 마일스톤 (Phase 1)*
+*조사일: 2026-03-27*

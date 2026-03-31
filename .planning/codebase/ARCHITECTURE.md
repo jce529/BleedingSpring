@@ -1,26 +1,26 @@
-# Architecture
+# 아키텍처
 
-**Analysis Date:** 2026-03-27
+**분석 날짜:** 2026-03-27
 
-## Pattern Overview
+## 패턴 개요
 
-**Overall:** Unity 2D Component-Based Architecture with SOLID-oriented design
+**전체:** SOLID 지향 설계가 적용된 Unity 2D 컴포넌트 기반 아키텍처
 
-**Key Characteristics:**
-- Single Responsibility Principle (SRP): each MonoBehaviour handles one concern (movement, input, stats, skills)
-- Dependency Inversion Principle (DIP): subsystems communicate through interfaces (`IPlayerContext`, `ISkill`, `IDamageable`) rather than concrete classes
-- Interface Segregation Principle (ISP): `ISkill` and `IDamageable` are small, focused contracts
-- Event-driven communication: C# `Action` events decouple stat changes from UI and AI reactions
-- Finite State Machine (FSM) pattern used for both player and enemy state management
+**주요 특징:**
+- 단일 책임 원칙 (SRP): 각 MonoBehaviour는 하나의 관심사를 처리 (움직임, 입력, 통계, 기술)
+- 의존성 역전 원칙 (DIP): 서브시스템은 구체적인 클래스가 아닌 인터페이스를 통해 통신 (`IPlayerContext`, `ISkill`, `IDamageable`)
+- 인터페이스 분리 원칙 (ISP): `ISkill`과 `IDamageable`은 작고 초점이 맞춰진 계약
+- 이벤트 기반 통신: C# `Action` 이벤트는 통계 변화를 UI와 AI 반응으로부터 분리
+- 유한 상태 머신 (FSM) 패턴은 플레이어와 적 상태 관리 모두에 사용
 
-## Layers
+## 계층
 
-**Input Layer:**
-- Purpose: Translate Unity Input System actions into typed C# events
-- Location: `Assets/Player/InputHandler.cs`
-- Contains: `InputSystem_Actions` wrapper, event declarations for all player actions
-- Depends on: `UnityEngine.InputSystem`, `GameStateManager` (for input gating)
-- Used by: `PlayerController` (subscribes to all events)
+**입력 계층:**
+- 목적: Unity Input System 액션을 타입된 C# 이벤트로 변환
+- 위치: `Assets/Player/InputHandler.cs`
+- 포함: `InputSystem_Actions` 래퍼, 모든 플레이어 액션의 이벤트 선언
+- 의존: `UnityEngine.InputSystem`, `GameStateManager` (입력 게이팅용)
+- 사용처: `PlayerController` (모든 이벤트 구독)
 
 **Player Controller Layer:**
 - Purpose: Top-level player orchestrator — owns state machine, wires subsystems together

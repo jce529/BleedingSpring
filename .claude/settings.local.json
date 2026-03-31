@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(git -C \"d:/새 폴더/BleedingSpring\" status)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Skill(gsd:map-codebase)",
+      "Bash(wc -l .planning/codebase/*.md)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: map existing codebase\" --files .planning/codebase/ARCHITECTURE.md .planning/codebase/CONCERNS.md .planning/codebase/CONVENTIONS.md .planning/codebase/INTEGRATIONS.md .planning/codebase/STACK.md .planning/codebase/STRUCTURE.md .planning/codebase/TESTING.md)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" config-new-project '{\"\"mode\"\":\"\"interactive\"\",\"\"granularity\"\":\"\"standard\"\",\"\"parallelization\"\":true,\"\"commit_docs\"\":true,\"\"model_profile\"\":\"\"balanced\"\",\"\"workflow\"\":{\"\"research\"\":true,\"\"plan_check\"\":true,\"\"verifier\"\":true,\"\"nyquist_validation\"\":true,\"\"auto_advance\"\":false}}')",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: initialize project\" --files .planning/PROJECT.md)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-project-researcher)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-research-synthesizer)",
+      "Bash(node \"C:/Users/MSI/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: add project research\" --files .planning/research/STACK.md .planning/research/FEATURES.md .planning/research/ARCHITECTURE.md .planning/research/PITFALLS.md .planning/research/SUMMARY.md)",
+      "Skill(gsd:resume-work)",
+      "Skill(gsd:new-milestone)",
+      "Skill(gsd:discuss-phase)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs\\(01\\): capture phase context\" --files \".planning/phases/01-player-hud/01-CONTEXT.md\" \".planning/phases/01-player-hud/01-DISCUSSION-LOG.md\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" state record-session --stopped-at \"Phase 1 context gathered\" --resume-file \".planning/phases/01-player-hud/01-CONTEXT.md\")",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs\\(state\\): record phase 1 context session\" --files \".planning/STATE.md\")",
+      "Bash(node:*)"
     ]
   }
 }

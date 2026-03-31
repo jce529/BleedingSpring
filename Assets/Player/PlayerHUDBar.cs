@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// World Space 세로 HUD 바: 물(위→아래) + 오염(아래→위) 이중 채움 + 워터 티어 구슬 3개.
+/// World Space 세로 HUD 바: 물(아래→위) + 오염(아래→위, 물의 하단부에 표시) 이중 채움 + 워터 티어 구슬 3개.
 /// 플레이어 자식 오브젝트에 부착합니다.
 /// </summary>
 public class PlayerHUDBar : MonoBehaviour
@@ -59,11 +59,15 @@ public class PlayerHUDBar : MonoBehaviour
         _cachedCurrentWater = current;
         _cachedMaxWater     = max;
 
-        // Water fills from top: fillAmount = current / max
+        // 물 바: 전체 최대치 대비 현재 물의 양을 아래서부터 채웁니다.
         if (waterFillImage != null)
+        {
+            waterFillImage.fillMethod = Image.FillMethod.Vertical;
+            waterFillImage.fillOrigin = (int)Image.OriginVertical.Bottom;
             waterFillImage.fillAmount = (max > 0f) ? (current / max) : 0f;
+        }
 
-        // Corruption ratio depends on current water, so update corruption fill too
+        // 물의 양이 변하면 오염도 비율(전체 대비)도 다시 계산되어야 하므로 호출
         UpdateCorruptionFill();
     }
 
@@ -75,13 +79,14 @@ public class PlayerHUDBar : MonoBehaviour
 
     private void UpdateCorruptionFill()
     {
-        if (corruptionFillImage == null) return;
+        if (corruptionFillImage == null || _cachedMaxWater <= 0f) return;
 
-        // Corruption fills from bottom: fillAmount = corruption / currentWater
-        // Guard against divide-by-zero: if currentWater <= 0, show full corruption
-        float ratio = (_cachedCurrentWater > 0f)
-            ? Mathf.Clamp01(_cachedCorruption / _cachedCurrentWater)
-            : 1f;
+        // 오염도: 아래서부터 전체 바의 최대치 대비 비율로 채웁니다.
+        // 이렇게 하면 물 바의 아래쪽 일부가 오염된 것처럼 시각적으로 나타납니다.
+        corruptionFillImage.fillMethod = Image.FillMethod.Vertical;
+        corruptionFillImage.fillOrigin = (int)Image.OriginVertical.Bottom;
+
+        float ratio = Mathf.Clamp01(_cachedCorruption / _cachedMaxWater);
         corruptionFillImage.fillAmount = ratio;
     }
 

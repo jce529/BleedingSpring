@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -86,7 +86,6 @@ public class ColorSwap_HeroKnight : MonoBehaviour
             m_colorSwapTex.SetPixel(index, 0, color);
         }
     }
-
 
     public void SwapColors(List<int> indexes, List<Color> colors)
     {

@@ -176,8 +176,6 @@ public class EnemyStats : MonoBehaviour, IDamageable
 #if UNITY_EDITOR
     private void OnGUI()
     {
-        // 씬 뷰에서 오브젝트를 선택했을 때만 표시하지 않고, 모든 Enemy 상태를 화면에 출력
-        // (적이 많을 경우 비활성화 권장)
         float effectiveMin = basePurificationMin - bonusPurificationMargin;
         float effectiveMax = basePurificationMax + bonusPurificationMargin;
 

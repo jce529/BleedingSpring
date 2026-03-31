@@ -1,33 +1,33 @@
-# Architecture Research
+# 아키텍처 리서치
 
-**Domain:** Unity 6 (2D URP) — UGUI System Integration into Existing Roguelike
-**Researched:** 2026-03-27
-**Confidence:** HIGH (grounded in existing codebase + Unity UGUI fundamentals that have been stable across Unity 5–6)
+**도메인:** Unity 6 (2D URP) — 기존 로그라이크에 UGUI 시스템 통합
+**조사일:** 2026-03-27
+**신뢰도:** 높음 (기존 코드베이스 기반 + Unity 5–6에서 안정적인 Unity UGUI 기초)
 
 ---
 
-## System Overview
+## 시스템 개요
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                     SCREEN SPACE — OVERLAY CANVAS                    │
+│                     스크린 스페이스 — 오버레이 캔버스                    │
 │  ┌───────────────────┐        ┌──────────────────────────────────┐   │
-│  │   Player HUD      │        │   Boss Bar (conditional active)  │   │
-│  │  - WaterBar       │        │  - BossHpBar (full width)        │   │
+│  │   플레이어 HUD     │        │   보스 바 (조건부 활성화)           │   │
+│  │  - WaterBar       │        │  - BossHpBar (전체 너비)          │   │
 │  │  - CorruptionBar  │        │  - BossNameLabel                 │   │
 │  │  - WaterTierIcons │        └──────────────────────────────────┘   │
 │  │  - SkillCooldowns │                                               │
 │  └───────────────────┘                                               │
 ├──────────────────────────────────────────────────────────────────────┤
-│                     WORLD SPACE CANVAS (per enemy prefab)            │
+│                     월드 스페이스 캔버스 (적 프리팹별)                  │
 │  ┌──────────────────────────────────────────────────┐                │
-│  │  EnemyUIRoot (follows enemy Transform)           │                │
+│  │  EnemyUIRoot (적 Transform 추적)                  │                │
 │  │  - EnemyHpBar (Image fill)                       │                │
 │  │  - EnemyCorruptionBar (Image fill)               │                │
-│  │    └─ SweetSpotOverlay (RectTransform, fixed)    │                │
+│  │    └─ SweetSpotOverlay (RectTransform, 고정)     │                │
 │  └──────────────────────────────────────────────────┘                │
 ├──────────────────────────────────────────────────────────────────────┤
-│                     GAME LAYER (existing codebase)                   │
+│                     게임 레이어 (기존 코드베이스)                       │
 │  ┌───────────────┐  ┌───────────────┐  ┌──────────────────────────┐ │
 │  │PlayerWaterStats│  │  EnemyStats  │  │    GameStateManager      │ │
 │  │ OnWaterChanged │  │  OnDamaged   │  │    OnGameStateChange     │ │
@@ -36,72 +36,72 @@
 │  └───────────────┘  └───────────────┘  └──────────────────────────┘ │
 │          ↑                  ↑                        ↑               │
 │    PlayerHUDPresenter  EnemyUIPresenter        GameOverUI /          │
-│    (subscribes)        (subscribes)            PauseUI               │
+│    (구독)              (구독)                  PauseUI               │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Component Responsibilities
+## 컴포넌트 책임
 
-| Component | Responsibility | Script Location |
+| 컴포넌트 | 책임 | 스크립트 위치 |
 |-----------|----------------|-----------------|
-| `PlayerHUDPresenter` | Subscribe to `PlayerWaterStats` events, drive HUD Image fills and tier icons | `Assets/UI/Player/PlayerHUDPresenter.cs` |
-| `WaterBarView` | Own the `Image` reference for the water (HP) fill bar | `Assets/UI/Player/WaterBarView.cs` |
-| `CorruptionBarView` | Own the `Image` reference for the player corruption fill bar | `Assets/UI/Player/CorruptionBarView.cs` |
-| `WaterTierIndicator` | Display 0–3 tier icons / highlight active tier | `Assets/UI/Player/WaterTierIndicator.cs` |
-| `SkillCooldownView` | Radial fill overlay per skill slot, driven by `ISkill.IsOnCooldown` + remaining time | `Assets/UI/Player/SkillCooldownView.cs` |
-| `EnemyUIPresenter` | Subscribe to `EnemyStats` events, drive enemy bars, compute Sweet Spot overlay position | `Assets/UI/Enemy/EnemyUIPresenter.cs` |
-| `EnemyHpBarView` | Own the HP fill `Image` on the World Space canvas | `Assets/UI/Enemy/EnemyHpBarView.cs` |
-| `EnemyCorruptionBarView` | Own the corruption fill `Image` and the Sweet Spot RectTransform | `Assets/UI/Enemy/EnemyCorruptionBarView.cs` |
-| `SweetSpotOverlay` | Stateless view: given (min, max, barWidth) positions and sizes a highlight rect | `Assets/UI/Enemy/SweetSpotOverlay.cs` |
-| `BossBarPresenter` | Activated on boss room entry, subscribes to boss `EnemyStats`, drives screen-space bar | `Assets/UI/Boss/BossBarPresenter.cs` |
-| `GameOverUI` | Subscribes to `GameStateManager.OnGameStateChange`, shows panel on `GameOver` | `Assets/UI/Overlay/GameOverUI.cs` |
+| `PlayerHUDPresenter` | `PlayerWaterStats` 이벤트 구독, HUD Image fill 및 티어 아이콘 구동 | `Assets/UI/Player/PlayerHUDPresenter.cs` |
+| `WaterBarView` | 물(HP) fill 바의 `Image` 참조 보유 | `Assets/UI/Player/WaterBarView.cs` |
+| `CorruptionBarView` | 플레이어 오염도 fill 바의 `Image` 참조 보유 | `Assets/UI/Player/CorruptionBarView.cs` |
+| `WaterTierIndicator` | 0–3 티어 아이콘 표시 / 활성 티어 강조 | `Assets/UI/Player/WaterTierIndicator.cs` |
+| `SkillCooldownView` | 스킬 슬롯별 방사형 fill 오버레이, `ISkill.IsOnCooldown` + 남은 시간으로 구동 | `Assets/UI/Player/SkillCooldownView.cs` |
+| `EnemyUIPresenter` | `EnemyStats` 이벤트 구독, 적 바 구동, Sweet Spot 오버레이 위치 계산 | `Assets/UI/Enemy/EnemyUIPresenter.cs` |
+| `EnemyHpBarView` | 월드 스페이스 캔버스의 HP fill `Image` 보유 | `Assets/UI/Enemy/EnemyHpBarView.cs` |
+| `EnemyCorruptionBarView` | 오염도 fill `Image`와 Sweet Spot RectTransform 보유 | `Assets/UI/Enemy/EnemyCorruptionBarView.cs` |
+| `SweetSpotOverlay` | 상태 없는 뷰: (min, max, barWidth)를 받아 하이라이트 rect 위치/크기 지정 | `Assets/UI/Enemy/SweetSpotOverlay.cs` |
+| `BossBarPresenter` | 보스 방 진입 시 활성화, 보스 `EnemyStats` 구독, 스크린 스페이스 바 구동 | `Assets/UI/Boss/BossBarPresenter.cs` |
+| `GameOverUI` | `GameStateManager.OnGameStateChange` 구독, `GameOver` 상태에서 패널 표시 | `Assets/UI/Overlay/GameOverUI.cs` |
 
 ---
 
-## Recommended Project Structure
+## 권장 프로젝트 구조
 
 ```
 Assets/
 └── UI/
     ├── Player/
-    │   ├── PlayerHUDPresenter.cs      # Event bridge: PlayerWaterStats → HUD views
-    │   ├── WaterBarView.cs            # Drives water HP Image.fillAmount
-    │   ├── CorruptionBarView.cs       # Drives player corruption Image.fillAmount
-    │   ├── WaterTierIndicator.cs      # Highlights active tier icon (0–3)
-    │   └── SkillCooldownView.cs       # Radial overlay per skill slot
+    │   ├── PlayerHUDPresenter.cs      # 이벤트 브릿지: PlayerWaterStats → HUD 뷰
+    │   ├── WaterBarView.cs            # 물 HP Image.fillAmount 구동
+    │   ├── CorruptionBarView.cs       # 플레이어 오염도 Image.fillAmount 구동
+    │   ├── WaterTierIndicator.cs      # 활성 티어 아이콘 강조 (0–3)
+    │   └── SkillCooldownView.cs       # 스킬 슬롯별 방사형 오버레이
     ├── Enemy/
-    │   ├── EnemyUIPresenter.cs        # Event bridge: EnemyStats → enemy bar views
-    │   ├── EnemyHpBarView.cs          # HP fill bar
-    │   ├── EnemyCorruptionBarView.cs  # Corruption fill bar + hosts SweetSpotOverlay
-    │   └── SweetSpotOverlay.cs        # Positions/sizes the highlight rect
+    │   ├── EnemyUIPresenter.cs        # 이벤트 브릿지: EnemyStats → 적 바 뷰
+    │   ├── EnemyHpBarView.cs          # HP fill 바
+    │   ├── EnemyCorruptionBarView.cs  # 오염도 fill 바 + SweetSpotOverlay 포함
+    │   └── SweetSpotOverlay.cs        # 하이라이트 rect 위치/크기 지정
     ├── Boss/
-    │   ├── BossBarPresenter.cs        # Binds to boss EnemyStats on room entry
-    │   └── BossBarView.cs             # Screen Space fill bar + name label
+    │   ├── BossBarPresenter.cs        # 방 진입 시 보스 EnemyStats에 바인딩
+    │   └── BossBarView.cs             # 스크린 스페이스 fill 바 + 이름 레이블
     └── Overlay/
-        ├── GameOverUI.cs              # GameStateManager → show/hide panel
-        └── PauseUI.cs                 # GameStateManager.Paused → show/hide
+        ├── GameOverUI.cs              # GameStateManager → 패널 표시/숨김
+        └── PauseUI.cs                 # GameStateManager.Paused → 표시/숨김
 ```
 
 ---
 
-## Architectural Patterns
+## 아키텍처 패턴
 
-### Pattern 1: Presenter-per-Stats (MVP, no framework)
+### 패턴 1: Stats별 Presenter (MVP, 프레임워크 없음)
 
-**What:** Each stats class (`PlayerWaterStats`, `EnemyStats`) owns C# `Action` events that already fire on every change. A dedicated Presenter MonoBehaviour subscribes to those events in `Start()` and translates data values into UGUI property writes. The View scripts (Bar, Indicator) expose only typed setters — no events of their own, no game-layer references.
+**내용:** 각 stats 클래스(`PlayerWaterStats`, `EnemyStats`)는 변경 시마다 발생하는 C# `Action` 이벤트를 보유합니다. 전용 Presenter MonoBehaviour가 `Start()`에서 해당 이벤트를 구독하고 데이터 값을 UGUI 프로퍼티 쓰기로 변환합니다. View 스크립트(Bar, Indicator)는 타입이 지정된 setter만 노출하며 자체 이벤트나 게임 레이어 참조는 없습니다.
 
-**Why this codebase:** The existing events (`OnWaterChanged(float, float)`, `OnCorruptionChanged(float, float)`, `OnWaterTierChanged(int)`) already carry exactly the data the HUD needs. No polling, no intermediate bus needed.
+**이 코드베이스에서의 이유:** 기존 이벤트(`OnWaterChanged(float, float)`, `OnCorruptionChanged(float, float)`, `OnWaterTierChanged(int)`)가 HUD에 필요한 정확한 데이터를 이미 전달하고 있습니다. 폴링이나 중간 버스가 필요 없습니다.
 
-**When to use:** All UI in this project. The coupling distance is: Stats → Presenter → View. Stats knows nothing about UI. View knows nothing about game logic.
+**사용 시점:** 이 프로젝트의 모든 UI. 결합 거리는 Stats → Presenter → View입니다. Stats는 UI에 대해 아무것도 모릅니다. View는 게임 로직에 대해 아무것도 모릅니다.
 
-**Component boundary rule:**
-- Presenter holds a `[SerializeField]` reference to the Stats script (injected via prefab / Inspector).
-- View holds only UGUI component references (`Image`, `Text`, `RectTransform`).
-- Presenter never touches UGUI components directly; it calls View setters.
+**컴포넌트 경계 규칙:**
+- Presenter는 Stats 스크립트에 대한 `[SerializeField]` 참조를 보유합니다 (프리팹/인스펙터를 통해 주입).
+- View는 UGUI 컴포넌트 참조(`Image`, `Text`, `RectTransform`)만 보유합니다.
+- Presenter는 UGUI 컴포넌트에 직접 접근하지 않으며 View setter를 호출합니다.
 
-**Example structure:**
+**예시 구조:**
 ```csharp
 // PlayerHUDPresenter.cs
 public class PlayerHUDPresenter : MonoBehaviour
@@ -113,7 +113,7 @@ public class PlayerHUDPresenter : MonoBehaviour
 
     private void Start()
     {
-        // Initialise from current values (covers scene-load state)
+        // 현재 값으로 초기화 (씬 로드 상태 처리)
         waterBar.SetFill(stats.WaterRatio);
         corruptionBar.SetFill(stats.CorruptionRatio);
         tierIndicator.SetTier(stats.WaterTier);
@@ -138,63 +138,63 @@ public class PlayerHUDPresenter : MonoBehaviour
 }
 ```
 
-**Trade-offs:**
-- No ScriptableObject event bus overhead — appropriate for a single-player game with a small number of stats objects.
-- Presenter needs an Inspector reference to the Stats script. For enemy prefabs, the Presenter and EnemyStats live on the same prefab, so `GetComponent<EnemyStats>()` in `Awake` is clean.
+**트레이드오프:**
+- ScriptableObject 이벤트 버스 오버헤드 없음 — 소수의 stats 객체를 가진 싱글플레이어 게임에 적합.
+- Presenter에는 Stats 스크립트에 대한 인스펙터 참조가 필요합니다. 적 프리팹의 경우 Presenter와 EnemyStats가 같은 프리팹에 있으므로 `Awake`에서 `GetComponent<EnemyStats>()`를 사용하는 것이 깔끔합니다.
 
 ---
 
-### Pattern 2: World Space Canvas on Enemy Prefab
+### 패턴 2: 적 프리팹의 월드 스페이스 캔버스
 
-**What:** Each enemy prefab gets a child GameObject with a `Canvas` set to **World Space** render mode. The canvas `RectTransform` is positioned at a fixed local offset above the sprite pivot (e.g., `localPosition = (0, 1.8f, 0)`). The canvas does not use a Camera reference for World Space in 2D URP — it renders into world units automatically.
+**내용:** 각 적 프리팹은 **World Space** 렌더 모드로 설정된 `Canvas`를 가진 자식 GameObject를 갖습니다. 캔버스 `RectTransform`은 스프라이트 피벗 위의 고정 로컬 오프셋에 배치됩니다 (예: `localPosition = (0, 1.8f, 0)`). 2D URP에서 월드 스페이스의 경우 캔버스는 카메라 참조를 사용하지 않으며 월드 단위로 자동 렌더링됩니다.
 
-**Why:** Following the enemy Transform via a child canvas requires zero per-frame code. Unity handles positioning; the bars simply stay in local space above the enemy. This is the standard approach for 2D action games.
+**이유:** 자식 캔버스를 통해 적 Transform을 따라가는 것은 프레임별 코드가 전혀 필요 없습니다. Unity가 위치를 처리하며 바는 단순히 적 위의 로컬 스페이스에 유지됩니다. 이것은 2D 액션 게임의 표준 접근법입니다.
 
-**Canvas settings:**
-- Render Mode: World Space
-- Dynamic Pixels Per Unit: 10 (prevents blurry text/sprites at small world sizes)
-- Sorting Layer: "UI" (above all sprite layers)
-- Sort Order: set per-enemy so bars do not z-fight when enemies stack
+**캔버스 설정:**
+- 렌더 모드: World Space
+- Dynamic Pixels Per Unit: 10 (작은 월드 크기에서 텍스트/스프라이트 흐림 방지)
+- Sorting Layer: "UI" (모든 스프라이트 레이어 위)
+- Sort Order: 적별 설정으로 적이 겹칠 때 z-fighting 방지
 
-**Prefab hierarchy:**
+**프리팹 계층:**
 ```
 EnemyRoot (EnemyAI, EnemyAttack, EnemyStats, EnemyUIPresenter)
 └── EnemyCanvas [Canvas — World Space, RectTransform 200×40px at (0, 1.8, 0)]
-    ├── HpBarBG [Image — dark background]
-    │   └── HpBarFill [Image — green, fillMethod=Horizontal, EnemyHpBarView]
-    ├── CorruptionBarBG [Image — dark background]
-    │   ├── CorruptionBarFill [Image — purple, fillMethod=Horizontal, EnemyCorruptionBarView]
-    │   └── SweetSpotHighlight [Image — semi-transparent yellow, SweetSpotOverlay]
-    └── (optional) EnemyNameLabel [TextMeshProUGUI]
+    ├── HpBarBG [Image — 어두운 배경]
+    │   └── HpBarFill [Image — 초록, fillMethod=Horizontal, EnemyHpBarView]
+    ├── CorruptionBarBG [Image — 어두운 배경]
+    │   ├── CorruptionBarFill [Image — 보라, fillMethod=Horizontal, EnemyCorruptionBarView]
+    │   └── SweetSpotHighlight [Image — 반투명 노란색, SweetSpotOverlay]
+    └── (선택) EnemyNameLabel [TextMeshProUGUI]
 ```
 
-**EnemyUIPresenter wiring:** The Presenter lives on `EnemyRoot`. It calls `GetComponent<EnemyStats>()` in `Awake` — no Inspector drag needed. It reads `basePurificationMin`, `basePurificationMax`, `bonusPurificationMargin` from `EnemyStats` to initialize the Sweet Spot overlay.
+**EnemyUIPresenter 연결:** Presenter는 `EnemyRoot`에 위치합니다. `Awake`에서 `GetComponent<EnemyStats>()`를 호출하므로 인스펙터 드래그가 필요 없습니다. Sweet Spot 오버레이 초기화를 위해 `EnemyStats`에서 `basePurificationMin`, `basePurificationMax`, `bonusPurificationMargin`을 읽습니다.
 
 ---
 
-### Pattern 3: Sweet Spot Highlight — RectTransform Anchored Overlay
+### 패턴 3: Sweet Spot 하이라이트 — RectTransform 앵커 오버레이
 
-**What:** The Sweet Spot is a semi-transparent colored `Image` child of `CorruptionBarFill`'s parent (the bar background), positioned and sized in local rect space to cover exactly the purification range.
+**내용:** Sweet Spot은 `CorruptionBarFill`의 부모(바 배경)의 자식인 반투명 색상 `Image`로, 정화 범위를 정확히 커버하도록 로컬 rect 공간에서 위치와 크기가 지정됩니다.
 
-**Why this approach over a custom shader:** The corruption bar uses `Image.fillMethod = Horizontal`, which means the fill region from 0→1 maps directly to `RectTransform.rect.width`. A child RectTransform sitting above the bar can be positioned using the same 0–1 normalized values, multiplied by bar width. No shader, no custom mesh — pure UGUI.
+**커스텀 셰이더 대신 이 접근법을 사용하는 이유:** 오염도 바는 `Image.fillMethod = Horizontal`을 사용하므로 fill 영역 0→1이 `RectTransform.rect.width`에 직접 매핑됩니다. 바 위에 앉은 자식 RectTransform은 바 너비에 곱한 동일한 0–1 정규화 값을 사용하여 위치를 지정할 수 있습니다. 셰이더도, 커스텀 메시도 필요 없으며 순수한 UGUI입니다.
 
-**Calculation (in `SweetSpotOverlay.cs`):**
+**계산 (`SweetSpotOverlay.cs`):**
 ```
-barWidth  = corruptionBarRect.rect.width   // e.g. 200px
+barWidth  = corruptionBarRect.rect.width   // 예: 200px
 
-// EnemyStats properties:
+// EnemyStats 프로퍼티:
 float effectiveMin = stats.basePurificationMin - stats.bonusPurificationMargin;
 float effectiveMax = stats.basePurificationMax + stats.bonusPurificationMargin;
 
-// Position: left edge of highlight at effectiveMin fraction of bar width
-// Pivot of SweetSpotHighlight = (0, 0.5) — left-anchored
+// 위치: 바 너비의 effectiveMin 비율에서 하이라이트 왼쪽 가장자리
+// SweetSpotHighlight의 Pivot = (0, 0.5) — 왼쪽 앵커
 highlightRect.anchorMin = new Vector2(0, 0);
 highlightRect.anchorMax = new Vector2(0, 1);
 highlightRect.offsetMin = new Vector2(effectiveMin * barWidth, 0);
 highlightRect.offsetMax = new Vector2(effectiveMax * barWidth, 0);
 ```
 
-Equivalently, use `anchorMin.x = effectiveMin` and `anchorMax.x = effectiveMax` with both offsets zeroed — **this is the cleaner approach** since the bar background RectTransform is the parent:
+또는 부모가 바 배경 RectTransform이므로 두 오프셋을 0으로 설정하고 `anchorMin.x = effectiveMin`, `anchorMax.x = effectiveMax`를 사용하는 것이 **더 깔끔한 접근법**입니다:
 
 ```csharp
 // SweetSpotOverlay.cs
@@ -208,38 +208,38 @@ public void SetRange(float normalizedMin, float normalizedMax)
 }
 ```
 
-**Call site in EnemyUIPresenter:**
+**EnemyUIPresenter 호출 지점:**
 ```csharp
 float min = stats.basePurificationMin - stats.bonusPurificationMargin;
 float max = stats.basePurificationMax + stats.bonusPurificationMargin;
 sweetSpotOverlay.SetRange(min, max);
 ```
 
-This must be called once on `Start()` and again whenever `bonusPurificationMargin` changes (future item system). `EnemyStats` should add an `OnPurificationRangeChanged` event when the item system is implemented; until then, call `SetRange` once in `Start`.
+이는 `Start()`에서 한 번 호출하고 `bonusPurificationMargin`이 변경될 때마다 다시 호출해야 합니다 (미래 아이템 시스템). 아이템 시스템이 구현될 때 `EnemyStats`에 `OnPurificationRangeChanged` 이벤트를 추가해야 하며 그 전까지는 `Start`에서 `SetRange`를 한 번 호출합니다.
 
-**Visual spec:**
-- Color: `new Color(1f, 0.9f, 0.2f, 0.4f)` — semi-transparent gold
-- Raycast Target: false (no input blocking)
-- Image Type: Simple (no sprite needed — solid color via `Image.color`)
+**시각적 스펙:**
+- 색상: `new Color(1f, 0.9f, 0.2f, 0.4f)` — 반투명 금색
+- Raycast Target: false (입력 차단 없음)
+- Image Type: Simple (스프라이트 불필요 — `Image.color`를 통한 단색)
 
 ---
 
-### Pattern 4: Boss Bar — Screen Space, Conditional Activation
+### 패턴 4: 보스 바 — 스크린 스페이스, 조건부 활성화
 
-**What:** The Boss Bar lives in the same Screen Space Overlay Canvas as the Player HUD but is inside a dedicated Panel that starts **inactive** (`gameObject.SetActive(false)`). When the game enters a boss room, a `BossBarPresenter` is activated, which calls `SetActive(true)` on the panel and subscribes to the boss's `EnemyStats`.
+**내용:** 보스 바는 플레이어 HUD와 동일한 Screen Space Overlay Canvas에 있지만 시작 시 **비활성화**(`gameObject.SetActive(false)`)된 전용 패널 안에 있습니다. 게임이 보스 방에 진입하면 `BossBarPresenter`가 활성화되어 패널에서 `SetActive(true)`를 호출하고 보스의 `EnemyStats`를 구독합니다.
 
-**Why separate from enemy World Space Canvas:** The boss bar must always be screen-anchored, large, and visible regardless of boss position. Using a World Space canvas for the boss would require following its transform — which breaks when the boss moves off-screen.
+**왜 적 월드 스페이스 캔버스와 분리하는가:** 보스 바는 보스 위치에 관계없이 항상 화면에 고정되어야 하며 크고 잘 보여야 합니다. 보스에 월드 스페이스 캔버스를 사용하면 transform을 따라가야 하는데, 보스가 화면 밖으로 이동하면 이것이 깨집니다.
 
-**Activation pattern:**
+**활성화 패턴:**
 ```csharp
-// BossBarPresenter.cs — called by a future BossRoomTrigger
+// BossBarPresenter.cs — 미래 BossRoomTrigger에 의해 호출됨
 public void BindToBoss(EnemyStats bossStats)
 {
     this.bossStats = bossStats;
     bossBarPanel.SetActive(true);
     bossNameLabel.text = bossStats.gameObject.name;
 
-    // Initialise fill from current values
+    // 현재 값으로 fill 초기화
     bossHpBar.SetFill(bossStats.CurrentHp / bossStats.MaxHp);
 
     bossStats.OnDamaged += HandleBossDamaged;
@@ -259,19 +259,19 @@ private void HandleBossDeath()
 }
 ```
 
-**Note on `EnemyStats` gap:** `EnemyStats` currently fires `OnDamaged` (no data) and `OnDeath`. It does not fire a continuous stat-change event the way `PlayerWaterStats` does. The boss bar must re-read `stats.CurrentHp / stats.MaxHp` inside `HandleBossDamaged`. This is acceptable since `OnDamaged` fires on every `TakeDamage` call.
+**`EnemyStats` 갭 참고:** `EnemyStats`는 현재 `OnDamaged`(데이터 없음)와 `OnDeath`를 발생시킵니다. `PlayerWaterStats`처럼 지속적인 stat 변경 이벤트는 발생시키지 않습니다. 보스 바는 `HandleBossDamaged` 내에서 `stats.CurrentHp / stats.MaxHp`를 다시 읽어야 합니다. `OnDamaged`가 모든 `TakeDamage` 호출 시 발생하므로 이것은 허용됩니다.
 
 ---
 
-### Pattern 5: Skill Cooldown — Radial Fill Overlay
+### 패턴 5: 스킬 쿨다운 — 방사형 Fill 오버레이
 
-**What:** Per skill slot, a full-size semi-transparent dark `Image` using `fillMethod = Radial360` is overlaid on the skill icon. When a skill enters cooldown, the fill amount starts at 1.0 (fully covered) and is driven to 0.0 over the cooldown duration.
+**내용:** 스킬 슬롯별로, `fillMethod = Radial360`을 사용하는 전체 크기의 반투명 어두운 `Image`가 스킬 아이콘 위에 오버레이됩니다. 스킬이 쿨다운에 진입하면 fill amount가 1.0(완전히 덮임)에서 시작하여 쿨다운 기간 동안 0.0으로 구동됩니다.
 
-**Why radial over linear:** Radial communicates "time remaining until ready" more intuitively for action game skills. It is a UGUI built-in with no custom shaders needed.
+**방사형을 선형 대신 사용하는 이유:** 방사형은 액션 게임 스킬에서 "준비까지 남은 시간"을 더 직관적으로 전달합니다. 커스텀 셰이더 없이 UGUI 내장 기능입니다.
 
-**Cooldown data gap:** `SkillBase` exposes `IsOnCooldown` (bool) and `cooldownDuration` (serialized float) but does not expose a remaining-time float property. The `SkillCooldownView` needs to drive the fill by tracking elapsed time itself, starting a coroutine when `IsOnCooldown` transitions from false to true.
+**쿨다운 데이터 갭:** `SkillBase`는 `IsOnCooldown`(bool)과 `cooldownDuration`(직렬화된 float)을 노출하지만 남은 시간 float 프로퍼티는 노출하지 않습니다. `SkillCooldownView`는 `IsOnCooldown`이 false에서 true로 전환될 때 코루틴을 시작하여 경과 시간을 직접 추적함으로써 fill을 구동해야 합니다.
 
-**Implementation approach — polling in Update:**
+**구현 접근법 — Update에서 폴링:**
 ```csharp
 // SkillCooldownView.cs
 private ISkill skill;
@@ -301,13 +301,13 @@ private void Update()
 }
 ```
 
-**Alternative (preferred if `SkillBase` is extended):** Add `public float CooldownRemaining { get; }` and `public float CooldownDuration { get; }` to `ISkill` and `SkillBase`. This removes polling and lets the View be purely data-driven. This extension should be done in Phase 1 alongside UI implementation.
+**대안 (SkillBase 확장 시 선호):** `ISkill`과 `SkillBase`에 `public float CooldownRemaining { get; }`와 `public float CooldownDuration { get; }`를 추가합니다. 이로써 폴링이 제거되고 View가 순수하게 데이터 기반이 됩니다. 이 확장은 Phase 1에서 UI 구현과 함께 수행해야 합니다.
 
 ---
 
-## Data Flow
+## 데이터 흐름
 
-### Player Stats to HUD
+### 플레이어 Stats → HUD
 
 ```
 PlayerWaterStats.SacrificeWater() / ReceiveAttack() / Heal()
@@ -322,12 +322,12 @@ PlayerWaterStats.SacrificeWater() / ReceiveAttack() / Heal()
     └── OnWaterTierChanged(int tier) ──────────────────► WaterTierIndicator.SetTier(tier)
 ```
 
-### Enemy Stats to World Space Bars
+### 적 Stats → 월드 스페이스 바
 
 ```
 EnemyStats.TakeDamage(hp, corruption)
     │
-    ├── CurrentHp / CurrentCorruption updated (no events for continuous values)
+    ├── CurrentHp / CurrentCorruption 업데이트 (지속 값에 대한 이벤트 없음)
     │
     └── OnDamaged.Invoke() ─────────────────────────────► EnemyUIPresenter.HandleDamaged()
                                                                ├── EnemyHpBarView.SetFill(stats.CurrentHp / stats.MaxHp)
@@ -335,9 +335,9 @@ EnemyStats.TakeDamage(hp, corruption)
                                                                        stats.CurrentCorruption / stats.MaxCorruption)
 ```
 
-**Data flow gap flagged:** `EnemyStats` does not fire separate HP-changed and Corruption-changed events. It fires only `OnDamaged` (both change together per `TakeDamage`). This is sufficient: the Presenter reads both ratios on every `OnDamaged`. No refactoring of `EnemyStats` required for Phase 1.
+**데이터 흐름 갭 표시:** `EnemyStats`는 별도의 HP 변경 및 오염도 변경 이벤트를 발생시키지 않습니다. `TakeDamage`당 두 가지가 함께 변경되는 `OnDamaged`만 발생시킵니다. 이것으로 충분합니다: Presenter는 모든 `OnDamaged`에서 두 비율을 읽습니다. Phase 1을 위해 `EnemyStats` 리팩토링이 필요 없습니다.
 
-### Game State to Overlay UI
+### 게임 상태 → 오버레이 UI
 
 ```
 PlayerWaterStats.CheckDeath()
@@ -348,154 +348,154 @@ PlayerWaterStats.CheckDeath()
 
 ---
 
-## Component Boundaries
+## 컴포넌트 경계
 
-| Boundary | Communication | Direction | Notes |
+| 경계 | 통신 | 방향 | 참고 |
 |----------|---------------|-----------|-------|
-| `PlayerWaterStats` ↔ `PlayerHUDPresenter` | C# Action events | Stats → Presenter (one-way) | Presenter subscribes; Stats never references UI |
-| `EnemyStats` ↔ `EnemyUIPresenter` | C# Action events + direct property read | Stats → Presenter (one-way) | Presenter reads `CurrentHp`, `MaxHp`, `CurrentCorruption`, `MaxCorruption` on `OnDamaged` |
-| `EnemyUIPresenter` ↔ `SweetSpotOverlay` | Direct method call `SetRange(min, max)` | Presenter → View | Called once in `Start`; repeated when purification margin changes |
-| `SkillBase` ↔ `SkillCooldownView` | Polling `ISkill.IsOnCooldown` in `Update` | View polls Skill (acceptable for 3 skills) | Upgrade to event/property if ISkill is extended |
-| `GameStateManager` ↔ `GameOverUI` / `PauseUI` | `OnGameStateChange` event | Manager → UI | Same pattern as existing `InputHandler` subscription |
-| `BossBarPresenter` ↔ `EnemyStats` (boss) | Direct method call `BindToBoss(EnemyStats)` + events | External trigger → Presenter, then Stats → Presenter | Boss room trigger calls `BindToBoss`; future milestone |
+| `PlayerWaterStats` ↔ `PlayerHUDPresenter` | C# Action 이벤트 | Stats → Presenter (단방향) | Presenter가 구독; Stats는 UI를 절대 참조하지 않음 |
+| `EnemyStats` ↔ `EnemyUIPresenter` | C# Action 이벤트 + 직접 프로퍼티 읽기 | Stats → Presenter (단방향) | Presenter는 `OnDamaged`에서 `CurrentHp`, `MaxHp`, `CurrentCorruption`, `MaxCorruption` 읽음 |
+| `EnemyUIPresenter` ↔ `SweetSpotOverlay` | 직접 메서드 호출 `SetRange(min, max)` | Presenter → View | `Start`에서 한 번 호출; 정화 마진 변경 시 반복 |
+| `SkillBase` ↔ `SkillCooldownView` | `Update`에서 `ISkill.IsOnCooldown` 폴링 | View가 Skill 폴링 (3개 스킬에 허용) | ISkill 확장 시 이벤트/프로퍼티로 업그레이드 |
+| `GameStateManager` ↔ `GameOverUI` / `PauseUI` | `OnGameStateChange` 이벤트 | Manager → UI | 기존 `InputHandler` 구독과 동일한 패턴 |
+| `BossBarPresenter` ↔ `EnemyStats` (보스) | 직접 메서드 호출 `BindToBoss(EnemyStats)` + 이벤트 | 외부 트리거 → Presenter, 그 다음 Stats → Presenter | 보스 방 트리거가 `BindToBoss` 호출; 미래 마일스톤 |
 
 ---
 
-## Build Order
+## 빌드 순서
 
-Dependencies between UI components determine implementation sequence:
+UI 컴포넌트 간의 의존성이 구현 순서를 결정합니다:
 
 ```
-1. UGUI Canvas scaffold
-   └── Create Player HUD Canvas (Screen Space Overlay)
-   └── Create Boss Bar panel (inactive) inside same Canvas
+1. UGUI 캔버스 스캐폴드
+   └── 플레이어 HUD 캔버스 생성 (Screen Space Overlay)
+   └── 동일 캔버스 내 보스 바 패널 생성 (비활성화)
 
-2. WaterBarView + CorruptionBarView (stateless fill setters)
-   └── No dependencies on game scripts
+2. WaterBarView + CorruptionBarView (상태 없는 fill setter)
+   └── 게임 스크립트에 대한 의존성 없음
 
 3. PlayerHUDPresenter
-   └── Depends on: PlayerWaterStats (exists), WaterBarView, CorruptionBarView
+   └── 의존: PlayerWaterStats (존재), WaterBarView, CorruptionBarView
 
 4. WaterTierIndicator
-   └── Depends on: PlayerHUDPresenter wiring (OnWaterTierChanged)
+   └── 의존: PlayerHUDPresenter 연결 (OnWaterTierChanged)
 
-5. SweetSpotOverlay (stateless, pure view)
-   └── No game-script dependencies
+5. SweetSpotOverlay (상태 없는, 순수 뷰)
+   └── 게임 스크립트 의존성 없음
 
 6. EnemyCorruptionBarView + EnemyHpBarView
-   └── No dependencies on game scripts
+   └── 게임 스크립트 의존성 없음
 
-7. EnemyUIPresenter (on enemy prefab)
-   └── Depends on: EnemyStats (exists), EnemyHpBarView, EnemyCorruptionBarView, SweetSpotOverlay
+7. EnemyUIPresenter (적 프리팹에)
+   └── 의존: EnemyStats (존재), EnemyHpBarView, EnemyCorruptionBarView, SweetSpotOverlay
 
 8. SkillCooldownView
-   └── Depends on: ISkill interface (exists); optionally on SkillBase cooldown extension
+   └── 의존: ISkill 인터페이스 (존재); 선택적으로 SkillBase 쿨다운 확장
 
 9. BossBarPresenter + BossBarView
-   └── Depends on: EnemyStats (exists), BossBarView, BossBarPanel activation logic
-   └── Requires: boss room trigger (Phase 2 scope) — stub the bind method for Phase 1 testing
+   └── 의존: EnemyStats (존재), BossBarView, BossBarPanel 활성화 로직
+   └── 필요: 보스 방 트리거 (Phase 2 범위) — Phase 1 테스트를 위해 바인드 메서드 스텁
 ```
 
-**Rationale for this order:** Stateless view components (2, 5, 6) can be built and tested with placeholder values in the Inspector before any Presenter exists. Presenters (3, 7, 8, 9) are wired last once their view dependencies are confirmed working. Boss bar is last because it requires scene architecture (room trigger) that doesn't exist yet.
+**이 순서의 근거:** 상태 없는 뷰 컴포넌트(2, 5, 6)는 Presenter가 존재하기 전에 인스펙터의 플레이스홀더 값으로 빌드하고 테스트할 수 있습니다. Presenter(3, 7, 8, 9)는 뷰 의존성이 확인된 후 마지막에 연결됩니다. 보스 바는 아직 존재하지 않는 씬 아키텍처(방 트리거)가 필요하므로 마지막입니다.
 
 ---
 
-## Anti-Patterns
+## 안티 패턴
 
-### Anti-Pattern 1: Presenter Directly Touching `Image.fillAmount`
+### 안티 패턴 1: Presenter가 `Image.fillAmount`에 직접 접근
 
-**What people do:** Write a single `PlayerHUD` MonoBehaviour that holds `[SerializeField] Image waterBarFill` and sets `waterBarFill.fillAmount = stats.WaterRatio` directly inside the event handler.
+**사람들이 하는 것:** `[SerializeField] Image waterBarFill`을 보유하고 이벤트 핸들러 내에서 직접 `waterBarFill.fillAmount = stats.WaterRatio`를 설정하는 단일 `PlayerHUD` MonoBehaviour를 작성합니다.
 
-**Why it's wrong:** It works for one bar. With five HUD elements, the class becomes a 200-line God Object that mixes layout concerns, stat interpretation, and animation. Adding a "flash red when HP low" effect requires branching inside what should be a simple fill setter.
+**왜 잘못인가:** 하나의 바에서는 작동합니다. 다섯 개의 HUD 요소가 있으면 클래스가 레이아웃 관심사, stat 해석, 애니메이션을 혼합하는 200줄짜리 God Object가 됩니다. "HP가 낮을 때 빨갛게 깜빡이기" 효과를 추가하려면 단순한 fill setter여야 할 곳에 분기가 필요합니다.
 
-**Do this instead:** Keep Presenters thin (interpret data, call typed setters). Keep View scripts thin (own the `Image` reference, expose `SetFill(float)`, handle visual effects like flashing internally). This lets you swap visuals (e.g., replace bar with icon row) without touching Presenter logic.
-
----
-
-### Anti-Pattern 2: World Space Canvas Not as Child of Enemy
-
-**What people do:** Create a single separate UI GameObject for enemy bars, then write `LateUpdate` code to `Camera.WorldToScreenPoint` the enemy position and move a Screen Space element to match.
-
-**Why it's wrong:** Screen-to-world conversion requires camera reference, breaks with camera zoom, and produces one-frame lag artifacts. Screen Space enemy bars also clip incorrectly when enemies go near screen edges.
-
-**Do this instead:** Child the Canvas directly to the enemy prefab. Unity moves it automatically. Zero code for positioning.
+**대신 이렇게:** Presenter를 얇게 유지하세요 (데이터 해석, 타입 setter 호출). View 스크립트를 얇게 유지하세요 (`Image` 참조 보유, `SetFill(float)` 노출, 내부적으로 깜빡임 같은 시각 효과 처리). 이렇게 하면 Presenter 로직을 건드리지 않고 시각적 요소를 교체할 수 있습니다 (예: 바를 아이콘 행으로 교체).
 
 ---
 
-### Anti-Pattern 3: Subscribing to Stats Events Without Unsubscribing
+### 안티 패턴 2: 적의 자식이 아닌 월드 스페이스 캔버스
 
-**What people do:** Subscribe in `Start()` and forget to unsubscribe on `OnDestroy()`.
+**사람들이 하는 것:** 적 바를 위한 별도의 UI GameObject를 만들고 `LateUpdate` 코드로 `Camera.WorldToScreenPoint`를 사용하여 적 위치를 얻고 스크린 스페이스 요소를 이동시킵니다.
 
-**Why it's wrong:** When an enemy is `Destroy`'d (which `EnemyStats.Die()` does immediately), the `EnemyStats` component fires `OnDeath` and is then destroyed. If `EnemyUIPresenter` does not unsubscribe, the delegate list on the stats object holds a reference that causes `MissingReferenceException` on the next event fire — or silently leaks memory. The existing codebase already follows the `OnDestroy` unsubscribe pattern (noted in its ARCHITECTURE.md error handling section). All new UI Presenters must follow it.
+**왜 잘못인가:** 스크린-월드 변환에는 카메라 참조가 필요하고, 카메라 줌으로 깨지며, 1프레임 지연 아티팩트가 발생합니다. 스크린 스페이스 적 바는 적이 화면 가장자리 근처에 있을 때 잘못 클리핑됩니다.
 
-**Do this instead:** Mirror the exact pattern `EnemyAI` uses: subscribe in `Start()`, unsubscribe every handler in `OnDestroy()`.
-
----
-
-### Anti-Pattern 4: Polling `EnemyStats` in `Update` for HP Values
-
-**What people do:** Skip event wiring and instead read `stats.CurrentHp` in `Update()` every frame.
-
-**Why it's wrong:** With 10 enemies active, that is 10 unnecessary reads per frame for values that change only on attack hit. With 30 enemies in a roguelike wave, it scales poorly. It also bypasses the established event architecture.
-
-**Do this instead:** Use `OnDamaged` (already exists) as the trigger. Read the stat values once inside the handler.
+**대신 이렇게:** 캔버스를 적 프리팹에 직접 자식화합니다. Unity가 자동으로 이동시킵니다. 위치 지정을 위한 코드가 전혀 없습니다.
 
 ---
 
-### Anti-Pattern 5: Boss Bar on a Separate Scene Canvas
+### 안티 패턴 3: 구독 해제 없이 Stats 이벤트 구독
 
-**What people do:** Create a second Camera and a second Canvas just for the boss bar to ensure it always renders on top.
+**사람들이 하는 것:** `Start()`에서 구독하고 `OnDestroy()`에서 구독 해제를 잊습니다.
 
-**Why it's wrong:** Unnecessary for a 2D game with a single camera. Sort Order on Canvases is sufficient. Multiple Canvases complicate the UI hierarchy and increase draw calls.
+**왜 잘못인가:** 적이 `Destroy`될 때(`EnemyStats.Die()`가 즉시 수행), `EnemyStats` 컴포넌트는 `OnDeath`를 발생시키고 파괴됩니다. `EnemyUIPresenter`가 구독 해제를 하지 않으면 stats 객체의 델리게이트 목록이 다음 이벤트 발생 시 `MissingReferenceException`을 일으키거나 메모리를 조용히 누수시키는 참조를 보유합니다. 기존 코드베이스는 이미 `OnDestroy` 구독 해제 패턴을 따르고 있습니다 (ARCHITECTURE.md 오류 처리 섹션에 언급). 모든 새 UI Presenter는 이를 따라야 합니다.
 
-**Do this instead:** Put the boss bar panel in the same Screen Space Overlay Canvas as the Player HUD, at a higher Sort Order (or simply below the HUD in hierarchy — Screen Space Overlay renders in hierarchy order). Activate/deactivate the panel via `SetActive`.
+**대신 이렇게:** `EnemyAI`가 사용하는 정확한 패턴을 따르세요: `Start()`에서 구독하고, `OnDestroy()`에서 모든 핸들러 구독 해제.
 
 ---
 
-## Integration Points
+### 안티 패턴 4: HP 값을 위해 `Update`에서 `EnemyStats` 폴링
 
-### Existing Game Scripts → New UI Scripts
+**사람들이 하는 것:** 이벤트 연결을 건너뛰고 대신 매 프레임 `Update()`에서 `stats.CurrentHp`를 읽습니다.
 
-| Game Script | UI Script | How Connected |
+**왜 잘못인가:** 10개의 적이 활성화되면 공격 히트 시에만 변경되는 값에 대해 프레임당 10번의 불필요한 읽기가 발생합니다. 로그라이크 웨이브에서 30개의 적이 있으면 성능이 저하됩니다. 또한 확립된 이벤트 아키텍처를 우회합니다.
+
+**대신 이렇게:** `OnDamaged`(이미 존재)를 트리거로 사용합니다. 핸들러 내에서 stat 값을 한 번 읽습니다.
+
+---
+
+### 안티 패턴 5: 별도 씬 캔버스의 보스 바
+
+**사람들이 하는 것:** 보스 바가 항상 위에 렌더링되도록 두 번째 카메라와 두 번째 캔버스를 만듭니다.
+
+**왜 잘못인가:** 단일 카메라를 가진 2D 게임에서는 불필요합니다. 캔버스의 Sort Order로 충분합니다. 여러 캔버스는 UI 계층을 복잡하게 만들고 드로우콜을 늘립니다.
+
+**대신 이렇게:** 보스 바 패널을 플레이어 HUD와 동일한 Screen Space Overlay Canvas에 더 높은 Sort Order로 넣습니다 (또는 단순히 계층에서 HUD 아래에 — Screen Space Overlay는 계층 순서로 렌더링). `SetActive`를 통해 패널을 활성화/비활성화합니다.
+
+---
+
+## 통합 지점
+
+### 기존 게임 스크립트 → 새 UI 스크립트
+
+| 게임 스크립트 | UI 스크립트 | 연결 방법 |
 |-------------|-----------|---------------|
-| `PlayerWaterStats` | `PlayerHUDPresenter` | Inspector `[SerializeField]` reference; Presenter subscribes to 3 events |
-| `EnemyStats` | `EnemyUIPresenter` | `GetComponent<EnemyStats>()` in `Awake` (same prefab); subscribes to `OnDamaged` + `OnDeath` |
-| `SkillBase` (×3) | `SkillCooldownView` (×3) | Inspector reference to each skill MonoBehaviour cast to `ISkill` |
-| `GameStateManager` | `GameOverUI`, `PauseUI` | Subscribe to `GameStateManager.Instance.OnGameStateChange` in `Start` |
-| `EnemyStats` (boss) | `BossBarPresenter` | `BindToBoss(EnemyStats)` called by future boss room trigger |
+| `PlayerWaterStats` | `PlayerHUDPresenter` | Inspector `[SerializeField]` 참조; Presenter가 3개 이벤트 구독 |
+| `EnemyStats` | `EnemyUIPresenter` | `Awake`에서 `GetComponent<EnemyStats>()` (같은 프리팹); `OnDamaged` + `OnDeath` 구독 |
+| `SkillBase` (×3) | `SkillCooldownView` (×3) | 각 스킬 MonoBehaviour에 대한 인스펙터 참조를 `ISkill`로 캐스팅 |
+| `GameStateManager` | `GameOverUI`, `PauseUI` | `Start`에서 `GameStateManager.Instance.OnGameStateChange` 구독 |
+| `EnemyStats` (보스) | `BossBarPresenter` | 미래 보스 방 트리거가 호출하는 `BindToBoss(EnemyStats)` |
 
-### Internal UI Boundaries
+### 내부 UI 경계
 
-| Boundary | Communication | Notes |
+| 경계 | 통신 | 참고 |
 |----------|---------------|-------|
-| `PlayerHUDPresenter` ↔ `WaterBarView` | Direct method call | Both on same Canvas; Inspector reference |
-| `EnemyUIPresenter` ↔ `SweetSpotOverlay` | `SetRange(float, float)` method | SweetSpotOverlay is child of CorruptionBarBG in prefab |
-| `BossBarPresenter` ↔ `BossBarView` | Direct method call | Both on Player HUD Canvas |
+| `PlayerHUDPresenter` ↔ `WaterBarView` | 직접 메서드 호출 | 같은 캔버스에; 인스펙터 참조 |
+| `EnemyUIPresenter` ↔ `SweetSpotOverlay` | `SetRange(float, float)` 메서드 | SweetSpotOverlay는 프리팹에서 CorruptionBarBG의 자식 |
+| `BossBarPresenter` ↔ `BossBarView` | 직접 메서드 호출 | 둘 다 플레이어 HUD 캔버스에 |
 
 ---
 
-## Scalability Considerations
+## 확장성 고려사항
 
-This is a single-player game. Scalability here means "stays clean as enemy count and skill count grow":
+이것은 싱글플레이어 게임입니다. 여기서 확장성은 "적 수와 스킬 수가 늘어나도 깔끔하게 유지됨"을 의미합니다:
 
-| Concern | At 5 enemies | At 30 enemies | Notes |
+| 관심사 | 5개 적 | 30개 적 | 참고 |
 |---------|-------------|---------------|-------|
-| World Space Canvas draw calls | 5 canvases | 30 canvases | Each World Space canvas is a separate draw call batch. For 30+ enemies, consider one shared World Space canvas + manual bar positioning. Not needed for Phase 1. |
-| Sweet Spot overlay recalculation | O(1) per enemy on Start | O(1) per enemy on Start | Static until item system changes margins; no per-frame cost |
-| Skill cooldown polling | 3 Update calls | 3 Update calls (skill count doesn't change) | Negligible |
-| Boss bar | 1 active at a time | 1 active at a time | Always O(1) |
+| 월드 스페이스 캔버스 드로우콜 | 5개 캔버스 | 30개 캔버스 | 각 월드 스페이스 캔버스는 별도의 드로우콜 배치. 30개 이상의 적에서는 단일 공유 월드 스페이스 캔버스 + 수동 바 위치 지정 고려. Phase 1에는 불필요. |
+| Sweet Spot 오버레이 재계산 | Start 시 적별 O(1) | Start 시 적별 O(1) | 아이템 시스템이 마진을 변경하기 전까지 정적; 프레임별 비용 없음 |
+| 스킬 쿨다운 폴링 | 3번의 Update 호출 | 3번의 Update 호출 (스킬 수 불변) | 무시할 수 있는 수준 |
+| 보스 바 | 동시에 1개 활성 | 동시에 1개 활성 | 항상 O(1) |
 
 ---
 
-## Sources
+## 출처
 
-- Existing codebase: `Assets/Enemy/EnemyStats.cs`, `Assets/Player/PlayerWaterStats.cs`, `Assets/Player/SkillBase.cs`, `Assets/GameScript/GameStateManager.cs` — read directly 2026-03-27
-- Existing architecture document: `.planning/codebase/ARCHITECTURE.md` — read directly 2026-03-27
-- Unity UGUI Image.fillMethod / RectTransform anchor system — HIGH confidence (stable API across Unity 5–6, documented at docs.unity3d.com)
-- World Space Canvas child-of-prefab pattern — HIGH confidence (fundamental Unity pattern, unchanged in Unity 6)
-- MVP/Presenter pattern for Unity — HIGH confidence (widely established; matches existing event-driven structure in codebase)
+- 기존 코드베이스: `Assets/Enemy/EnemyStats.cs`, `Assets/Player/PlayerWaterStats.cs`, `Assets/Player/SkillBase.cs`, `Assets/GameScript/GameStateManager.cs` — 2026-03-27 직접 읽음
+- 기존 아키텍처 문서: `.planning/codebase/ARCHITECTURE.md` — 2026-03-27 직접 읽음
+- Unity UGUI Image.fillMethod / RectTransform 앵커 시스템 — 높은 신뢰도 (Unity 5–6에서 안정적인 API, docs.unity3d.com에서 문서화됨)
+- 월드 스페이스 캔버스 프리팹-자식 패턴 — 높은 신뢰도 (기본 Unity 패턴, Unity 6에서 변경 없음)
+- Unity용 MVP/Presenter 패턴 — 높은 신뢰도 (널리 확립됨; 코드베이스의 기존 이벤트 기반 구조와 일치)
 
 ---
 
-*Architecture research for: Bleeding Spring — UGUI UI System Integration*
-*Researched: 2026-03-27*
+*아키텍처 리서치 대상: Bleeding Spring — UGUI UI 시스템 통합*
+*조사일: 2026-03-27*
