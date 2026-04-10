@@ -37,10 +37,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Phase 1
 **Requirements**: ENM-01, ENM-02, ENM-03, ENM-04, ENM-05, ENM-06, TECH-02, TECH-03
 **Success Criteria** (what must be TRUE):
-  1. 적에게 데미지를 주는 순간 적 머리 위에 HP 바와 오염도 바가 나타나고, 적이 이동해도 바가 따라온다
-  2. 오염도 바 위에 Sweet Spot 구간이 다른 색상의 구간으로 강조 표시되고, 적 타입마다 구간 위치가 다르게 표시된다
-  3. 적이 죽으면 HP/오염도 바가 사라지고, 정화/파괴 결과에 따라 "PURIFIED" 또는 "DESTROYED" 텍스트가 잠깐 표시된 후 사라진다
-  4. `EnemyStats`의 `OnHpChanged` 이벤트가 존재하고 HP 바가 이 이벤트에 구독해 업데이트된다
+  1. 적에게 데미지를 주는 순간 적 머리 뒤쪽에 수직형 수축 오염도 바가 나타나고, 적이 이동해도 바가 따라온다
+  2. 오염도 바의 높이가 현재 오염도에 비례하여 수축하며, 아래서부터 파란색 정화율이 차오른다
+  3. 오염도 바 위에 Sweet Spot 구간이 강조 표시되고, 바가 수축하더라도 구간 위치가 상대적으로 유지된다
+  4. `EnemyStats`의 `OnCorruptionChanged` 이벤트에 맞춰 바의 높이와 채움이 실시간으로 업데이트된다
   5. 모든 UI 바 스크립트가 `Bind()` / `Unbind()` 패턴을 따르며, 정화 경로에서 적 오브젝트가 NPC로 변환될 때 이벤트 누수가 발생하지 않는다
 **Plans**: TBD
 **UI hint**: yes
@@ -63,6 +63,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Player HUD | 0/TBD | Not started | - |
-| 2. Enemy World Space UI | 0/TBD | Not started | - |
+| 1. Player HUD | 3/3 | Completed | 2026-04-03 |
+| 2. Enemy World Space UI | 2/3 | In progress | - |
 | 3. Boss UI | 0/TBD | Not started | - |

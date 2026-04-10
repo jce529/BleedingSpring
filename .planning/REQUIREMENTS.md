@@ -16,12 +16,12 @@
 
 ### Enemy World Space UI
 
-- [ ] **ENM-01**: 적 머리 위 월드 스페이스 캔버스에 HP 바가 표시되고 적 이동에 따라 추종한다
-- [ ] **ENM-02**: 적 HP 바는 적이 데미지를 받는 순간 표시되고, 적이 죽으면 사라진다
-- [ ] **ENM-03**: 적 HP 바 아래에 오염도(Corruption) 바가 함께 표시되고 `EnemyStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
-- [ ] **ENM-04**: 오염도 바 위에 Sweet Spot 유효 범위(예: 10~20%)가 색상이 다른 구간으로 강조 표시된다 — `EnemyStats.sweetSpotMin/Max` 값을 읽어 RectTransform 앵커로 위치를 결정한다
-- [ ] **ENM-05**: Sweet Spot 구간 표시는 적 타입별로 다른 범위를 올바르게 반영한다
-- [ ] **ENM-06**: 적 처치 시 정화/파괴 결과에 따라 "PURIFIED" 또는 "DESTROYED" 텍스트/아이콘이 적 위치에 잠깐 표시된 후 사라진다
+- [ ] **ENM-01**: 적 머리 뒤쪽(Behind) 월드 스페이스 캔버스에 수직형 수축 바가 표시되고 적 이동에 따라 추종한다
+- [ ] **ENM-02**: 적 오염도 바는 적이 데미지를 받는 순간 표시되고, 적이 죽으면 사라진다
+- [ ] **ENM-03**: 오염도 바의 전체 높이는 `EnemyStats.CurrentCorruption`에 따라 수축하며 `EnemyStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
+- [ ] **ENM-04**: 오염도 바 아래쪽에서부터 정화율(Max-Current Corruption)이 파란색으로 차오른다
+- [ ] **ENM-05**: 오염도 바 위에 Sweet Spot 유효 범위가 강조 표시되며, 바가 수축하더라도 상대적 비율을 유지한다
+- [ ] **ENM-06 (Deferred)**: 적 처치 시 정화/파괴 결과에 따라 "PURIFIED" 또는 "DESTROYED" 텍스트 표시 (v2로 연기)
 
 ### Boss UI
 
