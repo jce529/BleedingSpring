@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-30T03:46:47.909Z"
-last_activity: 2026-03-30
+status: Code Implementation Finished
+stopped_at: Phase 2 context revised for vertical HUD
+last_updated: "2026-04-10T03:10:01.617Z"
+last_activity: 2026-04-09
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State — Bleeding Spring (혈연)
@@ -18,37 +18,38 @@ progress:
 ## Project Reference
 
 **What This Is:** Unity 6 (2D URP) + C# 2D 하드코어 액션 로그라이크 게임.
-플레이어가 체력(맑은 물)을 소비해 스킬을 사용하고, 오염도 Sweet Spot 범위 안에서 적을 정화하거나 파괴하는 전략적 전투.
+플레이어의 생존 영역이 물리적으로 수축하는 독특한 HUD 시스템을 가진 하드코어 액션.
 
-**Core Value:** 적 오염도 바 위의 Sweet Spot 시각화 — 자원과 오염도를 전략적으로 조율하는 긴장감 있는 의사결정.
+**Core Value:** 수축하는 생존 컨테이너 (Shrinking HUD) — 자원 소모 시 HUD 바가 직접 짧아지며 오염도가 차오르는 시각적 압박.
 
 ## Current Position
 
-Phase: 01 (player-hud) — EXECUTING
-Plan: 1 of 3
+Phase: 02 (enemy-world-space-ui) — EXECUTING
+Plan: 2 of 3
 
 - **Milestone:** v1.0 — UI 시스템 구축
-- **Phase:** 1 of 3 — Player HUD
-- **Plan:** Ready to plan
-- **Status:** Executing Phase 01
-- **Last activity:** 2026-03-30
+- **Phase:** 2 of 3 — Enemy World Space UI
+- **Plan:** Wave 2 complete, Wave 3 (Wiring & UAT) pending
+- **Status:** Code Implementation Finished
+- **Last activity:** 2026-04-09
 
 ## Progress
 
-`[░░░░░░░░░░] 0%`
+`[▓▓▓▓░░░░░░] 40%`
 
 - [x] 프로젝트 초기화 (PROJECT.md)
-- [x] 요구사항 정의 (REQUIREMENTS.md, 17개 v1 요구사항)
+- [x] 요구사항 정의 (REQUIREMENTS.md)
 - [x] ROADMAP.md 생성
-- [ ] Phase 1 — Player HUD (HUD-01~04, TECH-01)
-- [ ] Phase 2 — Enemy World Space UI (ENM-01~06, TECH-02~03)
+- [x] Phase 1 — Player HUD (Revised: Shrinking Container)
+- [ ] Phase 2 — Enemy World Space UI (Implementation Complete, UAT Pending)
 - [ ] Phase 3 — Boss UI (BOSS-01~04)
 
 ## Recent Decisions
 
-- Sweet Spot 범위: 구간 하이라이트 방식 (바 위 색상 구간) — Pending
-- 적 UI: 월드 스페이스(일반) + 스크린 스페이스(보스) — Pending
-- 플레이어 HP 바 미표시 (의도적 디자인) — Confirmed
+- HUD 형태: 플레이어 뒤를 따르는 세로형 수축 바 (Vertical Shrinking Bar)
+- 오염도 로직: 현재 물(HP) 대비 상대적 비율 (CurrentCorruption / CurrentCleanWater)
+- 워터 티어: 캐릭터 머리 위 3개 구슬로 분리 배치
+- 저체력 비네트: 25% 미만 시 화면 빨간색 펄스 효과 추가
 
 ## Pending Todos
 
@@ -60,6 +61,6 @@ Plan: 1 of 3
 
 ## Session Continuity
 
-Last session: 2026-03-27T09:09:20.933Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-player-hud/01-CONTEXT.md
+Last session: 2026-04-10T03:10:01.607Z
+Stopped at: Phase 2 context revised for vertical HUD
+Resume file: .planning/phases/02-enemy-world-space-ui/02-CONTEXT.md
