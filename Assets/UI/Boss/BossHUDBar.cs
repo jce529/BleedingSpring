@@ -38,13 +38,9 @@ public class BossHUDBar : PlayerHUDBar
 
         _bossStats = stats;
         _bossStats.OnCorruptionChanged += HandleBossCorruptionChanged;
-        _bossStats.OnDeath             += HandleBossDeath;
 
         if (bossNameText != null)
             bossNameText.text = _bossStats.BossName;
-
-        if (canvasGroup != null)
-            canvasGroup.alpha = 1f;
 
         // Initial update
         HandleBossCorruptionChanged(_bossStats.CurrentCorruption, _bossStats.MaxCorruption);
@@ -54,7 +50,6 @@ public class BossHUDBar : PlayerHUDBar
     {
         if (_bossStats == null) return;
         _bossStats.OnCorruptionChanged -= HandleBossCorruptionChanged;
-        _bossStats.OnDeath             -= HandleBossDeath;
         _bossStats = null;
     }
 
@@ -104,29 +99,5 @@ public class BossHUDBar : PlayerHUDBar
         // Matches EnemyWorldSpaceUI logic for visual consistency
         float relativeRatio = (_cachedCurrentValue > 0.01f) ? Mathf.Clamp01(_cachedSubValue / _cachedCurrentValue) : 1f;
         corruptionFillImage.fillAmount = relativeRatio;
-    }
-
-    private void HandleBossDeath()
-    {
-        // Fade out on death
-        if (canvasGroup != null)
-            StartCoroutine(FadeOut(0.5f));
-        Unbind();
-    }
-
-    private IEnumerator FadeOut(float duration)
-    {
-        if (canvasGroup == null) yield break;
-        
-        float elapsed = 0f;
-        float startAlpha = canvasGroup.alpha;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, elapsed / duration);
-            yield return null;
-        }
-        canvasGroup.alpha = 0f;
-        gameObject.SetActive(false);
     }
 }
