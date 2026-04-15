@@ -13,7 +13,7 @@ Phase 1에서 플레이어 자신의 위험 상태를 화면에 드러내고, Ph
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Player HUD** - 플레이어 오염도/워터 티어/위험 비네트를 HUD에 표시하고 기존 이벤트에 연동
+- [x] **Phase 1: Player HUD** - 플레이어 오염도/워터 티어/위험 비네트를 HUD에 표시하고 기존 이벤트에 연동
 - [ ] **Phase 2: Enemy World Space UI** - 적 머리 위 HP/오염도 바와 Sweet Spot 구간 하이라이트를 월드 스페이스로 구현
 - [ ] **Phase 3: Boss UI** - 보스 전투 전용 Screen Space HP 바와 적 월드 스페이스 바 억제 로직 추가
 
@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. O키를 눌러 워터 티어를 전환하면 HUD의 티어 표시기가 즉시 해당 단계(0~3)로 업데이트된다
   4. 플레이어 HP가 25% 이하로 떨어지면 화면 가장자리에 빨간 비네트/펄스가 나타나고, HP가 회복되면 사라진다
   5. `ISkill` 인터페이스에 `CooldownRemaining`과 `CooldownDuration` 프로퍼티가 존재해 컴파일 오류 없이 빌드된다
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 ### Phase 2: Enemy World Space UI
@@ -42,18 +42,22 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. 오염도 바 위에 Sweet Spot 구간이 강조 표시되고, 바가 수축하더라도 구간 위치가 상대적으로 유지된다
   4. `EnemyStats`의 `OnCorruptionChanged` 이벤트에 맞춰 바의 높이와 채움이 실시간으로 업데이트된다
   5. 모든 UI 바 스크립트가 `Bind()` / `Unbind()` 패턴을 따르며, 정화 경로에서 적 오브젝트가 NPC로 변환될 때 이벤트 누수가 발생하지 않는다
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 ### Phase 3: Boss UI
-**Goal**: 보스 전투 중 보스 HP가 화면 하단 전용 바로 표시되고 일반 적 바와 혼재되지 않는다
+**Goal**: 보스 전투 중 화면 우측 고정 세로형 수축 바로 보스 상태가 표시되고 일반 적 바와 혼재되지 않는다
 **Depends on**: Phase 2
 **Requirements**: BOSS-01, BOSS-02, BOSS-03, BOSS-04
 **Success Criteria** (what must be TRUE):
-  1. 보스 방에 진입하면 화면 하단에 보스 전용 HP 바와 보스 이름 텍스트가 활성화되고 실시간으로 HP를 반영한다
-  2. 보스가 죽으면 화면 하단 보스 HP 바가 비활성화된다
-  3. 보스 전투 중에는 보스 캐릭터 위에 월드 스페이스 HP/오염도 바가 나타나지 않는다
-**Plans**: TBD
+  1. 보스 방에 진입하면 화면 우측에 보스 전용 HUD 바와 이름이 활성화되고 실시간 상태를 반영한다
+  2. 보스 전투 중에는 보스 캐릭터 위에 일반 월드 스페이스 바가 나타나지 않는다
+  3. 보스가 Sweet Spot 구간에 진입하면 UI 바에 Glow 펄스 시각 피드백이 발생한다
+  4. 보스가 죽으면 화면 우측 HUD 바가 페이드 아웃되며 비활성화된다
+**Plans**: 3 plans
+- [x] 03-01-PLAN.md — 핵심 데이터(BossStats) 및 억제 로직 구현
+- [x] 03-02-PLAN.md — UI 관리(BossUIManager) 및 진입 트리거 구현
+- [ ] 03-03-PLAN.md — UI 프리팹 구성(EDITOR-GUIDE) 및 최종 UAT
 **UI hint**: yes
 
 ## Progress
@@ -65,4 +69,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Player HUD | 3/3 | Completed | 2026-04-03 |
 | 2. Enemy World Space UI | 2/3 | In progress | - |
-| 3. Boss UI | 0/TBD | Not started | - |
+| 3. Boss UI | 1/3 | In progress | - |

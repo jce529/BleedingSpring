@@ -25,10 +25,10 @@
 
 ### Boss UI
 
-- [ ] **BOSS-01**: 보스 방 진입 시 화면 하단에 보스 전용 HP 바(Screen Space)가 활성화되어 보스 HP를 실시간으로 표시한다
+- [x] **BOSS-01**: 보스 방 진입 시 화면 하단에 보스 전용 HP 바(Screen Space)가 활성화되어 보스 HP를 실시간으로 표시한다
 - [ ] **BOSS-02**: 보스 HP 바 활성화 시 보스 이름 텍스트가 함께 표시된다
-- [ ] **BOSS-03**: 보스가 죽으면 보스 HP 바가 비활성화된다
-- [ ] **BOSS-04**: 보스 전투 중에는 적 월드 스페이스 HP 바가 보스 위에 표시되지 않는다 (보스는 Screen Space 바만 사용)
+- [x] **BOSS-03**: 보스가 죽으면 보스 HP 바가 비활성화된다
+- [x] **BOSS-04**: 보스 전투 중에는 적 월드 스페이스 HP 바가 보스 위에 표시되지 않는다 (보스는 Screen Space 바만 사용)
 
 ### Technical Prerequisites
 
@@ -91,10 +91,10 @@
 | ENM-06 | Phase 2 | Pending |
 | TECH-02 | Phase 2 | Pending |
 | TECH-03 | Phase 2 | Pending |
-| BOSS-01 | Phase 3 | Pending |
+| BOSS-01 | Phase 3 | Complete |
 | BOSS-02 | Phase 3 | Pending |
-| BOSS-03 | Phase 3 | Pending |
-| BOSS-04 | Phase 3 | Pending |
+| BOSS-03 | Phase 3 | Complete |
+| BOSS-04 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 17 total
