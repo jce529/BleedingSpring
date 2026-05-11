@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     public void SetInvincible(bool value) => isInvincible = value;
     public bool IsInvincible => isInvincible;
 
+    public PlayerStanceManager StanceManager { get; private set; }
+
     // ─── 컴포넌트 참조 ───────────────────────────────────────────────────────
 
     private PlayerMovement movement;
@@ -43,6 +45,10 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     private int   attackCombo    = 0;
     private float lastAttackTime = -99f;
 
+    // 패링 타이머
+    [SerializeField] private float parryDuration = 0.35f;   // 패링 판정 창 (초)
+    private float parryTimer;
+
     // ─── 초기화 ──────────────────────────────────────────────────────────────
 
     private void Awake()
@@ -56,6 +62,8 @@ public class PlayerController : MonoBehaviour, IPlayerContext
         wideSlash   = GetComponent<WideSlashSkill>()    as ISkill;
         projectile  = GetComponent<ProjectileSkill>()   as ISkill;
 
+        StanceManager = GetComponent<PlayerStanceManager>();
+
         TryGetComponent(out animator);
     }
 
@@ -66,6 +74,8 @@ public class PlayerController : MonoBehaviour, IPlayerContext
         InitSkill(basicAttack);
         InitSkill(wideSlash);
         InitSkill(projectile);
+
+        StanceManager?.Initialize(this);
 
         inputHandler.OnMove            += HandleMoveInput;
         inputHandler.OnJump            += HandleJumpInput;
@@ -100,9 +110,19 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     {
         if (CurrentState == PlayerState.Dead) return;
 
+        TickParry();
         movement.Tick();
         HandleGroundStateTransitions();
         ApplyMovement();
+    }
+
+    private void TickParry()
+    {
+        if (CurrentState != PlayerState.Parrying) return;
+
+        parryTimer -= Time.deltaTime;
+        if (parryTimer <= 0f)
+            ChangeState(PlayerState.Idle);
     }
 
     // ─── 상태 전이 ───────────────────────────────────────────────────────────
@@ -216,19 +236,34 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     {
         if (CurrentState == PlayerState.Dashing)  return;
         if (CurrentState == PlayerState.Attacking) return;
-        projectile?.TryUse();
-        // Projectile도 Attack2 애니메이션 사용
-        animator?.SetTrigger("Attack2");
+        if (CurrentState == PlayerState.Dead)     return;
+
+        // 0단계: 패링 / 1~3단계: 원거리 스킬
+        if (Stats.WaterTier == 0)
+        {
+            HandleParryInput();
+        }
+        else
+        {
+            projectile?.TryUse();
+            animator?.SetTrigger("Attack2");
+        }
+    }
+
+    private void HandleParryInput()
+    {
+        // 패링 중 재발동 불가, 이미 패링 창이 열려 있으면 무시
+        if (CurrentState == PlayerState.Parrying) return;
+
+        ChangeState(PlayerState.Parrying);
+        parryTimer = parryDuration;
+        animator?.SetTrigger("Block");   // 애니메이터에 Block 트리거가 없으면 무시됨
+        Debug.Log("[PlayerController] 패링 시도");
     }
 
     private void HandleWaterTierSwitchInput()
     {
         Stats.CycleWaterTier();
-
-        int tier = Stats.WaterTier;
-        (basicAttack as SkillBase)?.SetStage(tier);
-        (wideSlash   as SkillBase)?.SetStage(tier);
-        (projectile  as SkillBase)?.SetStage(tier);
     }
 
     // ─── 유틸리티 ────────────────────────────────────────────────────────────

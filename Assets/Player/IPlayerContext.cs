@@ -15,4 +15,6 @@ public interface IPlayerContext
 
     /// <summary>대쉬 무적 프레임 제어에 사용됩니다.</summary>
     void SetInvincible(bool value);
+
+    PlayerStanceManager StanceManager { get; }
 }
