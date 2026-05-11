@@ -58,6 +58,14 @@
 - **PROG-01**: 런 내 정화/파괴 누적 카운터가 HUD에 표시된다 (Phase 2 스토리 분기 시스템 완성 후)
 - **PROG-02**: 런 종료 시 결과 요약 화면 (정화/파괴 수, 생존 시간 등)
 
+### Player Stance System
+
+- [x] **STN-01**: `StanceType` enum이 정의되고, 태세 종류를 코드와 Inspector에서 식별할 수 있다
+- [x] **STN-02**: `PlayerStanceManager` MonoBehaviour가 메인 태세와 보조 태세(`StanceType`)를 저장하며, 각각 3개의 `SkillBase` 슬롯을 Inspector에서 할당할 수 있다
+- [x] **STN-03**: `SkillBase`에 `costMultiplier`와 `effectMultiplier` 필드(기본값 1.0)가 추가되고, 스킬 실행 시 소모량과 효과 계산에 배율이 적용된다
+- [x] **STN-04**: `IPlayerContext` 인터페이스에 `PlayerStanceManager StanceManager` 프로퍼티가 추가되어 스킬 클래스에서 현재 태세 정보를 참조할 수 있다
+- [ ] **STN-05**: 기존 `BasicAttackSkill`, `WideSlashSkill`, `ProjectileSkill`이 `costMultiplier` / `effectMultiplier` 추가 후에도 기본값(1.0)으로 기존과 동일하게 동작한다 (하위 호환)
+
 ---
 
 ## Out of Scope
@@ -95,6 +103,11 @@
 | BOSS-02 | Phase 3 | Pending |
 | BOSS-03 | Phase 3 | Complete |
 | BOSS-04 | Phase 3 | Complete |
+| STN-01 | Phase 4 | Complete |
+| STN-02 | Phase 4 | Complete |
+| STN-03 | Phase 4 | Complete |
+| STN-04 | Phase 4 | Complete |
+| STN-05 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total

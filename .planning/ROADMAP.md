@@ -72,7 +72,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. 같은 종류의 스킬 컴포넌트(예: WideSlashSkill)가 메인 슬롯과 보조 슬롯에 각각 배치될 수 있으며, 배율만 다르게 동작한다
   5. 기존 BasicAttackSkill / WideSlashSkill / ProjectileSkill의 로직이 변경 없이 유지된다 (하위 호환)
 **Plans**: 2 plans
-- [ ] 04-01-PLAN.md — 태세 인프라 구축 (StanceType, PlayerStanceManager, SkillBase 배율 필드, IPlayerContext/PlayerController 확장)
+- [x] 04-01-PLAN.md — 태세 인프라 구축 (StanceType, PlayerStanceManager, SkillBase 배율 필드, IPlayerContext/PlayerController 확장)
 - [ ] 04-02-PLAN.md — 스킬 배율 적용 (costMultiplier/effectMultiplier 통합) 및 EDITOR-GUIDE
 
 ## Progress
