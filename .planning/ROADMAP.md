@@ -16,6 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Player HUD** - 플레이어 오염도/워터 티어/위험 비네트를 HUD에 표시하고 기존 이벤트에 연동
 - [ ] **Phase 2: Enemy World Space UI** - 적 머리 위 HP/오염도 바와 Sweet Spot 구간 하이라이트를 월드 스페이스로 구현
 - [ ] **Phase 3: Boss UI** - 보스 전투 전용 Screen Space HP 바와 적 월드 스페이스 바 억제 로직 추가
+- [ ] **Phase 4: Player Stance System** - 플레이어 메인/보조 태세 저장 구조와 태세별 스킬 슬롯 시스템 구현
 
 ## Phase Details
 
@@ -60,13 +61,28 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] 03-03-PLAN.md — UI 프리팹 구성(EDITOR-GUIDE) 및 최종 UAT
 **UI hint**: yes
 
+### Phase 4: Player Stance System
+**Goal**: 플레이어가 메인 태세와 보조 태세를 장착하고, 각 태세의 스킬 슬롯(1~3)이 독립적으로 동작하며 보조 태세 스킬은 소모량과 효과가 감소한다
+**Depends on**: Phase 1
+**Requirements**: STN-01, STN-02, STN-03, STN-04, STN-05
+**Success Criteria** (what must be TRUE):
+  1. `PlayerStanceManager`가 메인 태세와 보조 태세(StanceType)를 저장하고, 각각 3개의 ISkill 슬롯을 Inspector에서 할당할 수 있다
+  2. 보조 태세 스킬 슬롯의 `costMultiplier`와 `effectMultiplier`가 1.0 미만(예: 0.5)으로 설정되면, `SacrificeWater()` 소모량과 실제 효과(데미지/범위)가 해당 배율만큼 감소한다
+  3. `IPlayerContext`에 `StanceManager` 프로퍼티가 추가되어 스킬 클래스에서 현재 태세 정보를 참조할 수 있다
+  4. 같은 종류의 스킬 컴포넌트(예: WideSlashSkill)가 메인 슬롯과 보조 슬롯에 각각 배치될 수 있으며, 배율만 다르게 동작한다
+  5. 기존 BasicAttackSkill / WideSlashSkill / ProjectileSkill의 로직이 변경 없이 유지된다 (하위 호환)
+**Plans**: 2 plans
+- [ ] 04-01-PLAN.md — 태세 인프라 구축 (StanceType, PlayerStanceManager, SkillBase 배율 필드, IPlayerContext/PlayerController 확장)
+- [ ] 04-02-PLAN.md — 스킬 배율 적용 (costMultiplier/effectMultiplier 통합) 및 EDITOR-GUIDE
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3
+Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Player HUD | 3/3 | Completed | 2026-04-03 |
 | 2. Enemy World Space UI | 2/3 | In progress | - |
 | 3. Boss UI | 1/3 | In progress | - |
+| 4. Player Stance System | 0/2 | Not started | - |
