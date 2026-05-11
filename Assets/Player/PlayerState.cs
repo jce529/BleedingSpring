@@ -10,5 +10,6 @@ public enum PlayerState
     Falling,
     Dashing,
     Attacking,
+    Parrying,
     Dead
 }

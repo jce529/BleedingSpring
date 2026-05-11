@@ -14,9 +14,9 @@ Phase 1에서 플레이어 자신의 위험 상태를 화면에 드러내고, Ph
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Player HUD** - 플레이어 오염도/워터 티어/위험 비네트를 HUD에 표시하고 기존 이벤트에 연동
-- [ ] **Phase 2: Enemy World Space UI** - 적 머리 위 HP/오염도 바와 Sweet Spot 구간 하이라이트를 월드 스페이스로 구현
-- [ ] **Phase 3: Boss UI** - 보스 전투 전용 Screen Space HP 바와 적 월드 스페이스 바 억제 로직 추가
-- [ ] **Phase 4: Player Stance System** - 플레이어 메인/보조 태세 저장 구조와 태세별 스킬 슬롯 시스템 구현
+- [x] **Phase 2: Enemy World Space UI** - 적 머리 위 HP/오염도 바와 Sweet Spot 구간 하이라이트를 월드 스페이스로 구현
+- [x] **Phase 3: Boss UI** - 보스 전투 전용 Screen Space HP 바와 적 월드 스페이스 바 억제 로직 추가
+- [x] **Phase 4: Player Stance System** - 플레이어 메인/보조 태세 저장 구조와 태세별 스킬 슬롯 시스템 구현
 
 ## Phase Details
 
@@ -31,6 +31,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. 플레이어 HP가 25% 이하로 떨어지면 화면 가장자리에 빨간 비네트/펄스가 나타나고, HP가 회복되면 사라진다
   5. `ISkill` 인터페이스에 `CooldownRemaining`과 `CooldownDuration` 프로퍼티가 존재해 컴파일 오류 없이 빌드된다
 **Plans**: 3 plans
+- [x] 01-01-SUMMARY.md
+- [x] 01-02-SUMMARY.md
+- [x] 01-03-SUMMARY.md
 **UI hint**: yes
 
 ### Phase 2: Enemy World Space UI
@@ -44,6 +47,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. `EnemyStats`의 `OnCorruptionChanged` 이벤트에 맞춰 바의 높이와 채움이 실시간으로 업데이트된다
   5. 모든 UI 바 스크립트가 `Bind()` / `Unbind()` 패턴을 따르며, 정화 경로에서 적 오브젝트가 NPC로 변환될 때 이벤트 누수가 발생하지 않는다
 **Plans**: 3 plans
+- [x] 02-01-SUMMARY.md
+- [x] 02-02-SUMMARY.md
+- [x] EDITOR-GUIDE.md (Final Config)
 **UI hint**: yes
 
 ### Phase 3: Boss UI
@@ -56,9 +62,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. 보스가 Sweet Spot 구간에 진입하면 UI 바에 Glow 펄스 시각 피드백이 발생한다
   4. 보스가 죽으면 화면 우측 HUD 바가 페이드 아웃되며 비활성화된다
 **Plans**: 3 plans
-- [x] 03-01-PLAN.md — 핵심 데이터(BossStats) 및 억제 로직 구현
-- [x] 03-02-PLAN.md — UI 관리(BossUIManager) 및 진입 트리거 구현
-- [ ] 03-03-PLAN.md — UI 프리팹 구성(EDITOR-GUIDE) 및 최종 UAT
+- [x] 03-01-SUMMARY.md
+- [x] 03-02-SUMMARY.md
+- [x] 03-03-SUMMARY.md (EDITOR-GUIDE 포함)
 **UI hint**: yes
 
 ### Phase 4: Player Stance System
@@ -69,11 +75,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. `PlayerStanceManager`가 메인 태세와 보조 태세(StanceType)를 저장하고, 각각 3개의 ISkill 슬롯을 Inspector에서 할당할 수 있다
   2. 보조 태세 스킬 슬롯의 `costMultiplier`와 `effectMultiplier`가 1.0 미만(예: 0.5)으로 설정되면, `SacrificeWater()` 소모량과 실제 효과(데미지/범위)가 해당 배율만큼 감소한다
   3. `IPlayerContext`에 `StanceManager` 프로퍼티가 추가되어 스킬 클래스에서 현재 태세 정보를 참조할 수 있다
-  4. 같은 종류의 스킬 컴포넌트(예: WideSlashSkill)가 메인 슬롯과 보조 슬롯에 각각 배치될 수 있으며, 배율만 다르게 동작한다
+  4. 같은 종류의 스킬 컴포넌체(예: WideSlashSkill)가 메인 슬롯과 보조 슬롯에 각각 배치될 수 있으며, 배율만 다르게 동작한다
   5. 기존 BasicAttackSkill / WideSlashSkill / ProjectileSkill의 로직이 변경 없이 유지된다 (하위 호환)
 **Plans**: 2 plans
-- [x] 04-01-PLAN.md — 태세 인프라 구축 (StanceType, PlayerStanceManager, SkillBase 배율 필드, IPlayerContext/PlayerController 확장)
-- [ ] 04-02-PLAN.md — 스킬 배율 적용 (costMultiplier/effectMultiplier 통합) 및 EDITOR-GUIDE
+- [x] 04-01-SUMMARY.md
+- [x] 04-02-SUMMARY.md (EDITOR-GUIDE 포함)
 
 ## Progress
 
@@ -83,6 +89,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Player HUD | 3/3 | Completed | 2026-04-03 |
-| 2. Enemy World Space UI | 2/3 | In progress | - |
-| 3. Boss UI | 1/3 | In progress | - |
-| 4. Player Stance System | 0/2 | Not started | - |
+| 2. Enemy World Space UI | 3/3 | Completed | 2026-05-11 |
+| 3. Boss UI | 3/3 | Completed | 2026-05-11 |
+| 4. Player Stance System | 2/2 | Completed | 2026-05-11 |
+
+---
+*Last updated: 2026-05-11 — Milestone v1.0 completed*

@@ -35,42 +35,27 @@ This project uses Unity world-space units (not CSS pixels). The following scale 
 
 | Token | World Units | Usage |
 |-------|-------------|-------|
-| xs | 0.04 u | Inner padding between stacked bars (HP bar bottom → Corruption bar top) |
-| sm | 0.08 u | Bar end caps / visual margin from sprite edge |
-| md | 0.16 u | Offset above enemy head (Canvas pivot Y from sprite top) |
-| lg | 0.24 u | Minimum vertical clearance so bars do not overlap tile layer |
+| sm | 0.08 u | Bar width |
+| md | 1.0 - 1.5 u | Bar maximum height (matches enemy sprite height) |
+| lg | 0.2 u | Z-offset behind enemy sprite |
 
 **Bar dimensions (prescriptive):**
 
 | Element | Width | Height |
 |---------|-------|--------|
-| HP bar (container) | Match enemy sprite width (≈ 1.0–1.5 u) | 0.08 u |
-| Corruption bar (container) | Same as HP bar | 0.06 u |
-| Sweet Spot overlay | Calculated via RectTransform anchors | Same as Corruption bar |
-| Gap between HP and Corruption bar | 0.04 u (xs token) | — |
+| Vertical Corruption Bar (container) | 0.08 u (sm token) | Match enemy sprite height (≈ 1.0–1.5 u) |
 
 Exceptions:
-- Bar width is not a fixed token — it is set per-enemy-prefab to match sprite bounds (Inspector-assigned).
-- Touch target rule does not apply (game input, not UI buttons).
+- Bar height is not a fixed token — it is set per-enemy-prefab to match sprite bounds (Inspector-assigned).
+- Only displayed for the enemy currently in combat with the player.
 
-> Source: CONTEXT.md D-08, D-09 (bars are small and summarized, stacked HP above Corruption)
+> Source: CONTEXT.md D-01, D-02, D-04, D-10
 
 ---
 
 ## Typography
 
-This phase uses **no visible text labels** on the enemy bars in gameplay. Bar fill communicates values visually. The one text exception is the debug OnGUI label in EnemyStats (editor-only, not a UI contract concern).
-
-ENM-06 (PURIFIED/DESTROYED popup text) is deferred to v2 by user decision (CONTEXT.md D-07). No copywriting is required in this phase.
-
-If TextMeshPro labels are added in future phases, Phase 1 established these defaults (carried forward for consistency):
-
-| Role | Size (World Space TMP) | Weight | Line Height |
-|------|------------------------|--------|-------------|
-| Bar label (future) | 0.12 u | Regular (400) | 1.2 |
-| Popup result (deferred) | 0.18 u | Bold (700) | 1.0 |
-
-> Source: CONTEXT.md D-07 (ENM-06 skipped), Phase 1 pattern (no text on HUD bars)
+This phase uses **no visible text labels** on the enemy bars in gameplay. Bar fill communicates values visually.
 
 ---
 
@@ -80,60 +65,35 @@ All colors are Unity `Color` values (RGBA 0.0–1.0). Hex equivalents provided f
 
 | Role | Unity Color (RGBA) | Hex | Usage |
 |------|--------------------|-----|-------|
-| HP bar fill — healthy | (0.25, 0.72, 0.35, 1.0) | #40B859 | HP bar fill when HP > 50% |
-| HP bar fill — low | (0.85, 0.22, 0.22, 1.0) | #D93838 | HP bar fill when HP ≤ 50% (lerp from healthy) |
-| HP bar background | (0.12, 0.12, 0.14, 0.8) | #1E1E23CC | Dark tray behind HP fill |
-| Corruption bar fill — default | (0.55, 0.22, 0.75, 1.0) | #8C38BF | Corruption fill, matches Phase 1 corruption color family |
-| Corruption bar background | (0.12, 0.12, 0.14, 0.8) | #1E1E23CC | Dark tray behind Corruption fill |
-| Sweet Spot overlay | (0.95, 0.85, 0.25, 0.55) | #F2D940 8C | Gold/amber semi-transparent, clearly distinct from purple corruption |
-| Canvas background | Transparent (alpha = 0) | — | World Space Canvas has no background panel |
-
-**60 / 30 / 10 split (game-space interpretation):**
-
-| Proportion | Element | Color |
-|------------|---------|-------|
-| 60% (dominant) | HP bar tray + Corruption bar tray backgrounds | #1E1E23CC |
-| 30% (secondary) | HP fill + Corruption fill | #40B859 / #8C38BF |
-| 10% (accent) | Sweet Spot overlay only | #F2D94088 |
-
-Accent reserved for: **Sweet Spot overlay exclusively.** No other element uses gold/amber in this phase.
-
-Destructive: not applicable — this phase has no destructive UI actions (no confirmation dialogs, no delete flows).
+| Corruption bar background | (0.12, 0.12, 0.14, 0.8) | #1E1E23CC | Dark tray behind Corruption fill (Shrinks with CurrentCorruption) |
+| Purification fill | (0.25, 0.55, 0.85, 1.0) | #408CD9 | Clear water color, fills from bottom as corruption decreases |
+| Sweet Spot Glow | (1.0, 1.0, 1.0, 1.0) | #FFFFFF | White additive glow/overlay when in Sweet Spot range |
 
 **Color state rules:**
 
 | State | Element | Color Behavior |
 |-------|---------|----------------|
-| HP > 50% | HP bar fill | Static #40B859 |
-| HP ≤ 50% | HP bar fill | Lerp toward #D93838 as HP approaches 0 |
-| Hidden (no damage yet) | Entire Canvas | alpha = 0 (CanvasGroup.alpha or GameObject.SetActive(false)) |
-| Visible (post-first-hit) | Entire Canvas | Fade in over 0.15 s (CanvasGroup.alpha 0→1) |
-| OnDeath triggered | Entire Canvas | SetActive(false) immediately — no fade out |
-
-> Source: CONTEXT.md D-02 (no auto-hide timer), CONTEXT.md Claude's Discretion (fade-in 0.1–0.2 s → 0.15 s chosen), Phase 1 PlayerTierDisplay.cs litColor/dimColor palette reference
+| In Combat | Entire Canvas | Visible behind enemy |
+| Sweet Spot range | Purification fill | Enable Glow/Additive white pulse |
+| Hidden (no combat) | Entire Canvas | alpha = 0 |
 
 ---
 
 ## Interaction & Animation Contract
 
-This is a passive display — no player-interactable elements. All state changes are event-driven.
-
 | Trigger | Response | Duration |
 |---------|----------|---------|
-| `OnDamaged` fires for the first time | Canvas activates; fade in via CanvasGroup.alpha 0→1 | 0.15 s linear |
-| `OnHpChanged(current, max)` fires | HP fill Image.fillAmount = current/max | Immediate (no tween) |
-| `OnCorruptionChanged(current, max)` fires | Corruption fill Image.fillAmount = current/max | Immediate (no tween) |
-| `Bind(EnemyStats)` called | Sweet Spot overlay RectTransform anchorMin.x and anchorMax.x set once | Immediate (1 calculation at bind time) |
+| `OnDamaged` fires for the first time | Canvas activates behind enemy; snap-in | 0.15 s |
+| `OnCorruptionChanged(current, max)` | Container height scale.y = current/max; FillAmount update | Immediate |
+| **Enter Sweet Spot** | **Trigger Flash + Enable Continuous Glow** | Snap / Pulse |
 | `OnDeath` fires | Canvas SetActive(false) | Immediate |
-| Enemy moves (transform follows) | Canvas is a child of the enemy GameObject — no scripted follow needed | Automatic via parenting |
 
-**Sorting Layer:**
+**Sorting & Layering:**
 
 | Layer | Order | Rationale |
 |-------|-------|-----------|
-| Default | +10 | Above sprite renderers (Order in Layer 0), below Screen Space Overlay canvases |
+| Default | -5 | **Behind** sprite renderers (Order in Layer 0) |
 
-> The World Space Canvas Sorting Layer must be set to "Default" with Order in Layer = 10 so enemy bars render above sprites but never occlude screen-space HUD.
 
 > Source: CONTEXT.md D-10 (World Space Canvas as child, same pattern as Phase 1), Claude's Discretion (Sorting Layer)
 

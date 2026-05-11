@@ -46,9 +46,19 @@ public class EnemyStats : MonoBehaviour, IDamageable
     /// <summary>사망(Die 또는 Purify) 시 발생. EnemyAI가 Dead 상태 진입에 사용합니다.</summary>
     public event Action OnDeath;
 
+    /// <summary>HP 변경 시 발생 (current, max). UI 바가 구독한다. TECH-02.</summary>
+    public event Action<float, float> OnHpChanged;
+
+    /// <summary>오염도 변경 시 발생 (current, max). UI 바가 구독한다.</summary>
+    public event Action<float, float> OnCorruptionChanged;
+
     // ─── 내부 ────────────────────────────────────────────────────────────────
 
     private bool isDead;
+    private bool isInvincible;
+
+    public bool IsDead       => isDead;
+    public bool IsInvincible { get => isInvincible; set => isInvincible = value; }
 
     // ─── 초기화 ──────────────────────────────────────────────────────────────
 
@@ -57,6 +67,13 @@ public class EnemyStats : MonoBehaviour, IDamageable
         CurrentHp         = maxHp;
         CurrentCorruption = maxCorruption;  // 적은 완전히 오염된 상태에서 시작
         isDead            = false;
+        isInvincible      = false;
+
+        // 대장장이 보너스 적용
+        if (VillageManager.Instance != null)
+        {
+            bonusPurificationMargin += VillageManager.Instance.GetPurifyMarginBonus();
+        }
     }
 
     // ─── 핵심 공개 API ───────────────────────────────────────────────────────
@@ -66,14 +83,15 @@ public class EnemyStats : MonoBehaviour, IDamageable
     /// 오염도는 0 이하로 떨어질 수 있습니다 (과정화 → 파괴 판정).
     /// 체력이 0 이하가 되면 CheckDeathState()를 호출합니다.
     /// </summary>
-    /// <param name="hpDamage">감소할 체력량</param>
-    /// <param name="corruptionDamage">감소할 오염도량</param>
-    public void TakeDamage(float hpDamage, float corruptionDamage)
+    public virtual void TakeDamage(float hpDamage, float corruptionDamage)
     {
-        if (isDead) return;
+        if (isDead || isInvincible) return;
 
         CurrentHp         -= hpDamage;
         CurrentCorruption -= corruptionDamage;  // 0 이하도 허용 (과정화)
+
+        OnHpChanged?.Invoke(CurrentHp, maxHp);
+        OnCorruptionChanged?.Invoke(CurrentCorruption, maxCorruption);
 
         Debug.Log($"[EnemyStats] {gameObject.name} 피격 — " +
                   $"HP: {CurrentHp:F1}/{maxHp} | " +
@@ -97,6 +115,8 @@ public class EnemyStats : MonoBehaviour, IDamageable
         if (isDead) return false;
 
         CurrentHp -= cost;
+
+        OnHpChanged?.Invoke(CurrentHp, maxHp);
 
         if (CurrentHp <= 0f)
         {
@@ -124,18 +144,26 @@ public class EnemyStats : MonoBehaviour, IDamageable
 
     /// <summary>
     /// 현재 오염 비율을 검사해 정화(Purify) 또는 파괴(Die)를 결정합니다.
-    /// 실제 정화 범위: [basePurificationMin - margin, basePurificationMax + margin]
+    /// [세계관 준수] HP가 낮을수록 자아 형성을 위한 정화 범위(Sweet Spot)가 좁아집니다.
     /// </summary>
-    private void CheckDeathState()
+    protected virtual void CheckDeathState()
     {
-        float ratio        = CorruptionRatio;
-        float effectiveMin = basePurificationMin - bonusPurificationMargin;
-        float effectiveMax = basePurificationMax + bonusPurificationMargin;
+        float ratio = CorruptionRatio;
+        float hpPercent = Mathf.Clamp01(CurrentHp / maxHp); // 0이겠지만 안전을 위해
 
-        Debug.Log($"[EnemyStats] 사망 판정 — 오염 비율: {ratio * 100f:F1}% | " +
-                  $"정화 범위: [{effectiveMin * 100f:F1}% ~ {effectiveMax * 100f:F1}%]");
+        // HP가 낮을수록 범위가 좁아짐 (기본 범위의 중심인 0.5f로 수렴)
+        // hpPercent가 0에 가까울수록 lerp 결과가 1.0f가 되어 범위 폭이 최소화됨
+        float shrinkFactor = 1f - hpPercent; 
+        float center = (basePurificationMin + basePurificationMax) * 0.5f;
+        
+        // HP 100%일 때 기존 범위, HP 0%에 가까울수록 center로 수축 (최소 10%의 여유는 보장)
+        float currentMin = Mathf.Lerp(basePurificationMin - bonusPurificationMargin, center - 0.05f, shrinkFactor);
+        float currentMax = Mathf.Lerp(basePurificationMax + bonusPurificationMargin, center + 0.05f, shrinkFactor);
 
-        if (ratio >= effectiveMin && ratio <= effectiveMax)
+        Debug.Log($"[EnemyStats] 최종 사망 판정 — 오염 비율: {ratio * 100f:F1}% | " +
+                  $"동적 정화 범위: [{currentMin * 100f:F1}% ~ {currentMax * 100f:F1}%] (수축률: {shrinkFactor * 100f:F0}%)");
+
+        if (ratio >= currentMin && ratio <= currentMax)
         {
             isDead = true;
             Purify();
@@ -147,9 +175,21 @@ public class EnemyStats : MonoBehaviour, IDamageable
     }
 
     /// <summary>정화 판정 처리. PurifiedNPC가 있으면 NPC로 전환, 없으면 오브젝트 제거.</summary>
-    private void Purify()
+    protected virtual void Purify()
     {
         Debug.Log($"[EnemyStats] ✦ {gameObject.name} 정화(Purified) 성공! ✦");
+
+        WorldPurificationManager.Instance?.ReportPurification(purificationType);
+
+        // 재화 획득 (Pond: 1 | River: 10 | Lake: 50)
+        int reward = purificationType switch
+        {
+            WorldPurificationManager.EnemyType.Pond => 1,
+            WorldPurificationManager.EnemyType.River => 10,
+            WorldPurificationManager.EnemyType.Lake => 50,
+            _ => 0
+        };
+        VillageCurrencyManager.Instance?.AddEssence(reward);
 
         OnDeath?.Invoke();
         enabled = false;   // EnemyStats 비활성화
@@ -157,15 +197,23 @@ public class EnemyStats : MonoBehaviour, IDamageable
         // PurifiedNPC가 없으면 자동으로 추가
         var npc = GetComponent<PurifiedNPC>() ?? gameObject.AddComponent<PurifiedNPC>();
         npc.Activate();
+
+        OnPurified(npc);
     }
 
+    /// <summary>하위 클래스에서 정화 성공 후 NPC 데이터를 설정하는 등의 후처리에 사용합니다.</summary>
+    protected virtual void OnPurified(PurifiedNPC npc) { }
+
     /// <summary>파괴 판정 처리. 오염이 너무 높거나 낮은 상태로 사망 또는 공격 비용으로 사망.</summary>
-    public void Die()
+    public virtual void Die()
     {
         if (isDead) return;
         isDead = true;
 
         Debug.Log($"[EnemyStats] ✕ {gameObject.name} 파괴(Died). 정화 실패.");
+        
+        WorldPurificationManager.Instance?.ReportDestruction(purificationType);
+
         OnDeath?.Invoke();
         // TODO: 파괴 이펙트, 패널티 처리
         Destroy(gameObject);
@@ -190,6 +238,10 @@ public class EnemyStats : MonoBehaviour, IDamageable
             $"Sweet Spot: [{effectiveMin * 100f:F0}% ~ {effectiveMax * 100f:F0}%]";
 
         GUI.Label(new Rect(10, 200, 300, 120), info, style);
+    }
+#endif
+}
+bel(new Rect(10, 200, 300, 120), info, style);
     }
 #endif
 }

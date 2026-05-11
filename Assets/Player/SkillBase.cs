@@ -9,16 +9,23 @@ public abstract class SkillBase : MonoBehaviour, ISkill
 {
     [Header("공통 스킬 설정")]
     [SerializeField] protected float cooldownDuration = 0.5f;
-    [SerializeField]              protected LayerMask enemyLayer;
+    [Tooltip("공격 완료 후 이동/공격이 제한되는 빈틈 시간")]
+    [SerializeField] protected float recoveryDuration = 0.15f;
+    [SerializeField] protected LayerMask enemyLayer;
 
     [Header("태세 배율 (보조 태세용 인스턴스는 0.5 설정)")]
     [SerializeField] protected float costMultiplier   = 1f;
     [SerializeField] protected float effectMultiplier = 1f;
 
+    [Header("단계별 HP 소모량")]
+    [Tooltip("0단계(극소) | 1단계(소량) | 2단계(대량) | 3단계(극대)")]
+    [SerializeField] protected float[] hpCostPerStage = { 1f, 5f, 15f, 30f };
+
     private float _cooldownRemaining;
 
-    [Header("단계별 오염도 데미지 비율 (HP 데미지 대비, 0단계 = 0%)")]
-    [SerializeField] protected float[] corruptionRatioPerStage = { 0f, 0.3f, 0.6f, 1.0f };
+    [Header("단계별 오염도 데미지 비율 (HP 데미지 대비)")]
+    [Tooltip("0단계: 정화율 변화 없음 | 1단계: 표준 | 2단계: 고압(정화 전용) | 3단계: 초고압")]
+    [SerializeField] protected float[] corruptionRatioPerStage = { 0f, 0.4f, 1.5f, 2.5f };
 
     [Header("공격 범위 표시")]
     [SerializeField] protected GameObject attackRangePrefab;
@@ -92,6 +99,20 @@ public abstract class SkillBase : MonoBehaviour, ISkill
         return hpDamage * corruptionRatioPerStage[idx];
     }
 
+    /// <summary>마을 보너스가 포함된 최종 데미지 배율을 반환합니다.</summary>
+    protected float GetFinalEffectMultiplier()
+    {
+        float mult = effectMultiplier;
+
+        // 이야기꾼 보너스: 0단계일 때 위력 강화
+        if (Stage == 0 && VillageManager.Instance != null)
+        {
+            mult *= VillageManager.Instance.GetTier0PowerMultiplier();
+        }
+
+        return mult;
+    }
+
     // ─── 전방 박스 중심 계산 ─────────────────────────────────────────────────
 
     /// <summary>
@@ -114,6 +135,19 @@ public abstract class SkillBase : MonoBehaviour, ISkill
 
     private IEnumerator UseCoroutine()
     {
+        // 1. 현재 단계의 소모량 계산 (태세 배율 + 마을 주술사 보너스 적용)
+        int   stageIdx = Mathf.Clamp(Stage, 0, hpCostPerStage.Length - 1);
+        float shamanMult = VillageManager.Instance != null ? VillageManager.Instance.GetCostMultiplier() : 1f;
+        float cost     = hpCostPerStage[stageIdx] * costMultiplier * shamanMult;
+
+        // 2. HP 소모 시도
+        if (!Context.Stats.SacrificeWater(cost))
+        {
+            Debug.LogWarning($"[{GetType().Name}] HP 부족으로 발동 실패 (필요: {cost:F1})");
+            IsOnCooldown = false;
+            yield break;
+        }
+
         IsOnCooldown = true;
         Context.ChangeState(PlayerState.Attacking);
 
@@ -122,10 +156,16 @@ public abstract class SkillBase : MonoBehaviour, ISkill
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
         Debug.Log($"[{GetType().Name}] 발동 — {Stage}단계 | " +
-                  $"HP: {Context.Stats.CurrentCleanWater:F0} | " +
-                  $"오염도: {Context.Stats.CurrentCorruption:F0}");
+                  $"소모HP: {cost:F1} | " +
+                  $"현재HP: {Context.Stats.CurrentCleanWater:F1}");
 
         yield return StartCoroutine(ExecuteSkill());
+
+        // 공격 후 빈틈(Recovery) — 이 동안은 여전히 Attacking 상태 유지
+        if (recoveryDuration > 0f)
+        {
+            yield return new WaitForSeconds(recoveryDuration);
+        }
 
         _cooldownRemaining = cooldownDuration;
         while (_cooldownRemaining > 0f)

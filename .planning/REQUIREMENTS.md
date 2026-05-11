@@ -16,25 +16,25 @@
 
 ### Enemy World Space UI
 
-- [ ] **ENM-01**: 적 머리 뒤쪽(Behind) 월드 스페이스 캔버스에 수직형 수축 바가 표시되고 적 이동에 따라 추종한다
-- [ ] **ENM-02**: 적 오염도 바는 적이 데미지를 받는 순간 표시되고, 적이 죽으면 사라진다
-- [ ] **ENM-03**: 오염도 바의 전체 높이는 `EnemyStats.CurrentCorruption`에 따라 수축하며 `EnemyStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
-- [ ] **ENM-04**: 오염도 바 아래쪽에서부터 정화율(Max-Current Corruption)이 파란색으로 차오른다
-- [ ] **ENM-05**: 오염도 바 위에 Sweet Spot 유효 범위가 강조 표시되며, 바가 수축하더라도 상대적 비율을 유지한다
+- [x] **ENM-01**: 적 머리 뒤쪽(Behind) 월드 스페이스 캔버스에 수직형 수축 바가 표시되고 적 이동에 따라 추종한다
+- [x] **ENM-02**: 적 오염도 바는 적이 데미지를 받는 순간 표시되고, 적이 죽으면 사라진다
+- [x] **ENM-03**: 오염도 바의 전체 높이는 `EnemyStats.CurrentCorruption`에 따라 수축하며 `EnemyStats.OnCorruptionChanged` 이벤트에 실시간으로 반응한다
+- [x] **ENM-04**: 오염도 바 아래쪽에서부터 정화율(Max-Current Corruption)이 파란색으로 차오른다
+- [x] **ENM-05**: 오염도 바 위에 Sweet Spot 유효 범위가 강조 표시되며, 바가 수축하더라도 상대적 비율을 유지한다
 - [ ] **ENM-06 (Deferred)**: 적 처치 시 정화/파괴 결과에 따라 "PURIFIED" 또는 "DESTROYED" 텍스트 표시 (v2로 연기)
 
 ### Boss UI
 
-- [x] **BOSS-01**: 보스 방 진입 시 화면 하단에 보스 전용 HP 바(Screen Space)가 활성화되어 보스 HP를 실시간으로 표시한다
-- [ ] **BOSS-02**: 보스 HP 바 활성화 시 보스 이름 텍스트가 함께 표시된다
+- [x] **BOSS-01**: 보스 방 진입 시 화면 우측에 보스 전용 HP 바(Screen Space)가 활성화되어 보스 HP를 실시간으로 표시한다
+- [x] **BOSS-02**: 보스 HP 바 활성화 시 보스 이름 텍스트가 함께 표시된다
 - [x] **BOSS-03**: 보스가 죽으면 보스 HP 바가 비활성화된다
 - [x] **BOSS-04**: 보스 전투 중에는 적 월드 스페이스 HP 바가 보스 위에 표시되지 않는다 (보스는 Screen Space 바만 사용)
 
 ### Technical Prerequisites
 
 - [x] **TECH-01**: `ISkill` 인터페이스에 `CooldownRemaining`과 `CooldownDuration` 프로퍼티가 추가된다 (스킬 쿨다운 UI가 v2에서 이 인터페이스를 사용할 수 있도록 준비)
-- [ ] **TECH-02**: `EnemyStats`에 `OnHpChanged(float current, float max)` 이벤트가 추가된다 (기존 `OnDamaged` 대신 명시적 이벤트로 HP 바 업데이트)
-- [ ] **TECH-03**: 모든 UI 바 스크립트는 `Bind(stats)` / `Unbind()` 패턴을 구현해 이벤트 구독 누수를 방지한다 (특히 Purify 경로에서 `OnDestroy` 미호출 문제 대응)
+- [x] **TECH-02**: `EnemyStats`에 `OnHpChanged(float current, float max)` 이벤트가 추가된다 (기존 `OnDamaged` 대신 명시적 이벤트로 HP 바 업데이트)
+- [x] **TECH-03**: 모든 UI 바 스크립트는 `Bind(stats)` / `Unbind()` 패턴을 구현해 이벤트 구독 누수를 방지한다 (특히 Purify 경로에서 `OnDestroy` 미호출 문제 대응)
 
 ---
 
@@ -64,7 +64,7 @@
 - [x] **STN-02**: `PlayerStanceManager` MonoBehaviour가 메인 태세와 보조 태세(`StanceType`)를 저장하며, 각각 3개의 `SkillBase` 슬롯을 Inspector에서 할당할 수 있다
 - [x] **STN-03**: `SkillBase`에 `costMultiplier`와 `effectMultiplier` 필드(기본값 1.0)가 추가되고, 스킬 실행 시 소모량과 효과 계산에 배율이 적용된다
 - [x] **STN-04**: `IPlayerContext` 인터페이스에 `PlayerStanceManager StanceManager` 프로퍼티가 추가되어 스킬 클래스에서 현재 태세 정보를 참조할 수 있다
-- [ ] **STN-05**: 기존 `BasicAttackSkill`, `WideSlashSkill`, `ProjectileSkill`이 `costMultiplier` / `effectMultiplier` 추가 후에도 기본값(1.0)으로 기존과 동일하게 동작한다 (하위 호환)
+- [x] **STN-05**: 기존 `BasicAttackSkill`, `WideSlashSkill`, `ProjectileSkill`이 `costMultiplier` / `effectMultiplier` 추가 후에도 기본값(1.0)으로 기존과 동일하게 동작한다 (하위 호환)
 
 ---
 
@@ -91,23 +91,23 @@
 | HUD-03 | Phase 1 | Complete |
 | HUD-04 | Phase 1 | Complete |
 | TECH-01 | Phase 1 | Complete |
-| ENM-01 | Phase 2 | Pending |
-| ENM-02 | Phase 2 | Pending |
-| ENM-03 | Phase 2 | Pending |
-| ENM-04 | Phase 2 | Pending |
-| ENM-05 | Phase 2 | Pending |
-| ENM-06 | Phase 2 | Pending |
-| TECH-02 | Phase 2 | Pending |
-| TECH-03 | Phase 2 | Pending |
+| ENM-01 | Phase 2 | Complete |
+| ENM-02 | Phase 2 | Complete |
+| ENM-03 | Phase 2 | Complete |
+| ENM-04 | Phase 2 | Complete |
+| ENM-05 | Phase 2 | Complete |
+| ENM-06 | Phase 2 | Deferred |
+| TECH-02 | Phase 2 | Complete |
+| TECH-03 | Phase 2 | Complete |
 | BOSS-01 | Phase 3 | Complete |
-| BOSS-02 | Phase 3 | Pending |
+| BOSS-02 | Phase 3 | Complete |
 | BOSS-03 | Phase 3 | Complete |
 | BOSS-04 | Phase 3 | Complete |
 | STN-01 | Phase 4 | Complete |
 | STN-02 | Phase 4 | Complete |
 | STN-03 | Phase 4 | Complete |
 | STN-04 | Phase 4 | Complete |
-| STN-05 | Phase 4 | Pending |
+| STN-05 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 17 total
@@ -116,4 +116,4 @@
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 — Roadmap created, traceability confirmed*
+*Last updated: 2026-05-11 — Milestone v1.0 complete*

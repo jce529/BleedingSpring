@@ -15,7 +15,7 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
     // ─── Inspector 설정 ───────────────────────────────────────────────────────
 
     [Header("물(체력) 설정")]
-    [SerializeField] private float maxCleanWater = 100f;
+    [SerializeField] private float baseMaxCleanWater = 100f;
 
     [Header("오염도 설정")]
     public float maxCorruptionThreshold = 100f;   // public: 적마다 오염 비율이 다르므로 외부 참조 가능
@@ -23,8 +23,8 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
     // ─── 공개 상태 ───────────────────────────────────────────────────────────
 
     public float CurrentCleanWater  { get; private set; }
-    public float MaxCleanWater      => maxCleanWater;
-    public float WaterRatio         => CurrentCleanWater / maxCleanWater;
+    public float MaxCleanWater      => baseMaxCleanWater + (VillageManager.Instance != null ? VillageManager.Instance.GetMaxHpBonus() : 0f);
+    public float WaterRatio         => CurrentCleanWater / MaxCleanWater;
 
     public float CurrentCorruption  { get; private set; }
     /// <summary>오염도 비율 (0~1). UI 게이지 표시에 사용합니다.</summary>
@@ -55,7 +55,7 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
 
     private void Awake()
     {
-        CurrentCleanWater = maxCleanWater;
+        CurrentCleanWater = MaxCleanWater;
         CurrentCorruption = 0f;
         isDead            = false;
     }
@@ -68,10 +68,13 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
     /// </summary>
     public void TakeDamage(float hpDamage, float corruptionDamage)
     {
-        if (isDead || hpDamage <= 0f) return;
+        if (isDead || (hpDamage <= 0f && corruptionDamage <= 0f)) return;
 
-        CurrentCleanWater = Mathf.Max(0f, CurrentCleanWater - hpDamage);
-        OnWaterChanged?.Invoke(CurrentCleanWater, maxCleanWater);
+        if (hpDamage > 0f)
+        {
+            CurrentCleanWater = Mathf.Max(0f, CurrentCleanWater - hpDamage);
+            OnWaterChanged?.Invoke(CurrentCleanWater, MaxCleanWater);
+        }
 
         if (corruptionDamage > 0f)
         {
@@ -96,7 +99,7 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
 
         // 체력 감소
         CurrentCleanWater = Mathf.Max(0f, CurrentCleanWater - damage);
-        OnWaterChanged?.Invoke(CurrentCleanWater, maxCleanWater);
+        OnWaterChanged?.Invoke(CurrentCleanWater, MaxCleanWater);
 
         // 오염도 증가
         float corruptionGain = attackerCorruptionRatio * maxCorruptionThreshold;
@@ -121,7 +124,7 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
         if (CurrentCleanWater <= cost) return false;   // 생존 최소 물 보장
 
         CurrentCleanWater -= cost;
-        OnWaterChanged?.Invoke(CurrentCleanWater, maxCleanWater);
+        OnWaterChanged?.Invoke(CurrentCleanWater, MaxCleanWater);
         return true;
     }
 
@@ -129,8 +132,8 @@ public class PlayerWaterStats : MonoBehaviour, IDamageable
     public void Heal(float amount)
     {
         if (isDead || amount <= 0f) return;
-        CurrentCleanWater = Mathf.Min(maxCleanWater, CurrentCleanWater + amount);
-        OnWaterChanged?.Invoke(CurrentCleanWater, maxCleanWater);
+        CurrentCleanWater = Mathf.Min(MaxCleanWater, CurrentCleanWater + amount);
+        OnWaterChanged?.Invoke(CurrentCleanWater, MaxCleanWater);
     }
 
     /// <summary>오염도를 정화합니다. (맵 정화 등 외부 이벤트 연동)</summary>

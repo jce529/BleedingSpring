@@ -7,7 +7,7 @@
 **Runner:**
 - Unity Test Framework `1.6.0` (`com.unity.test-framework`) is installed as a package
 - Config: `Packages/manifest.json` — dependency entry `"com.unity.test-framework": "1.6.0"`
-- No custom test assembly definition (`.asmdef`) found under `Assets/`
+- No custom test assembly definition (`.asmdef`) found under `Assets/` (relying on default assembly behavior or needs `.asmdef` for isolated tests)
 
 **Assertion Library:**
 - Unity Test Framework uses NUnit 3 (bundled)
@@ -20,26 +20,22 @@ Unity Editor → Window → General → Test Runner  (Edit Mode or Play Mode tes
 ## Test File Organization
 
 **Location:**
-- No project-authored test files exist under `Assets/`. The test framework package is present but no tests have been written.
-- Unity Test Framework convention (to follow when adding tests):
-  - Edit Mode tests: `Assets/Tests/Editor/`
-  - Play Mode tests: `Assets/Tests/PlayMode/`
-  - Each folder requires its own `.asmdef` file with test references
+- Project-authored tests are located under `Assets/Tests/`.
+- Edit Mode tests: `Assets/Tests/Editor/`
+  - Example: `Assets/Tests/Editor/BossUIManagerTests.cs`
+- Play Mode tests: `Assets/Tests/PlayMode/` (Not yet present, but recommended for physics/coroutines)
 
 **Naming:**
-- Unity convention: `<TestedClass>Tests.cs` (e.g., `PlayerWaterStatsTests.cs`)
+- Unity convention: `<TestedClass>Tests.cs` (e.g., `BossUIManagerTests.cs`, `PlayerWaterStatsTests.cs`)
 - Test methods: `<MethodName>_<Scenario>_<ExpectedResult>` (e.g., `TakeDamage_WhenHpReachesZero_InvokesOnDeath`)
 
 **Structure:**
 ```
 Assets/
-└── Tests/                    # Does not exist yet — must be created
+└── Tests/
     ├── Editor/               # Edit Mode (no scene required, fast)
-    │   ├── AssemblyRef.asmdef
-    │   └── <Class>Tests.cs
+    │   └── BossUIManagerTests.cs
     └── PlayMode/             # Play Mode (requires scene, tests coroutines/physics)
-        ├── AssemblyRef.asmdef
-        └── <Class>Tests.cs
 ```
 
 ## Test Structure
@@ -54,37 +50,25 @@ using UnityEngine.TestTools;
 using System.Collections;
 
 [TestFixture]
-public class PlayerWaterStatsTests
+public class BossUIManagerTests
 {
-    private GameObject go;
-    private PlayerWaterStats stats;
-
-    [SetUp]
-    public void SetUp()
-    {
-        go    = new GameObject();
-        stats = go.AddComponent<PlayerWaterStats>();
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        Object.DestroyImmediate(go);
-    }
-
     [Test]
-    public void TakeDamage_ReducesCurrentCleanWater()
+    public void Singleton_Instance_IsNotNull()
     {
-        stats.TakeDamage(10f, 0f);
-        Assert.That(stats.CurrentCleanWater, Is.EqualTo(90f));
+        GameObject go = new GameObject("BossUIManager");
+        var manager = go.AddComponent<BossUIManager>();
+        
+        Assert.IsNotNull(BossUIManager.Instance);
+        
+        Object.DestroyImmediate(go);
     }
 }
 ```
 
 **Patterns:**
-- `[SetUp]` / `[TearDown]` for per-test `GameObject` creation and cleanup
+- `[SetUp]` / `[TearDown]` for per-test `GameObject` creation and cleanup (though many tests do this inline currently)
 - `new GameObject().AddComponent<T>()` to instantiate components in Edit Mode without a scene
-- `Object.DestroyImmediate(go)` in `[TearDown]` to prevent test leakage
+- `Object.DestroyImmediate(go)` in `[TearDown]` or inline to prevent test leakage in Editor
 - `[UnityTest]` + `IEnumerator` for tests that must advance frames (coroutines, physics, `Time.deltaTime`)
 
 ## Mocking
@@ -112,7 +96,7 @@ public class FakePlayerContext : IPlayerContext
 **What to Mock:**
 - `IPlayerContext` — when testing `SkillBase` subclasses (`BasicAttackSkill`, `WideSlashSkill`, `ProjectileSkill`)
 - `IDamageable` targets — when testing hit detection without real enemy `GameObjects`
-- `GameStateManager.Instance` — set to `null` to avoid singleton side effects in isolation tests
+- `GameStateManager.Instance` — be careful with singletons; they may need to be cleared or guarded
 
 **What NOT to Mock:**
 - `PlayerWaterStats`, `EnemyStats` — these are pure data+event classes with no Unity physics; instantiate directly with `AddComponent<>`
@@ -129,13 +113,10 @@ private static PlayerWaterStats CreateStats(float maxWater = 100f, float maxCorr
 {
     var go    = new GameObject();
     var stats = go.AddComponent<PlayerWaterStats>();
-    // Use reflection or Awake call if private fields need setting
+    // Use reflection or public properties if needed
     return stats;
 }
 ```
-
-**Location:**
-- Fixtures should go in `Assets/Tests/Editor/Helpers/` or `Assets/Tests/PlayMode/Helpers/`
 
 ## Coverage
 
@@ -154,7 +135,7 @@ Unity Editor → Edit → Project Settings → Code Coverage (requires com.unity
 - Best candidates for immediate unit testing:
   - `Assets/Player/PlayerWaterStats.cs` — `TakeDamage`, `SacrificeWater`, `Heal`, `Purify`, `CheckDeath`, `CycleWaterTier`
   - `Assets/Player/PlayerStats.cs` — `TakeDamage`, `TrySacrificeHp`, `Heal`
-  - `Assets/Enemy/EnemyStats.cs` — `TakeDamage`, `SpendHpOnAttack`, `WidenPurificationRange`, purify vs die boundary
+  - `Assets/Enemy/EnemyStats.cs` — `TakeDamage`, `SpendHpOnAttack`, `WidenPurificationRange`
   - `Assets/GameScript/GameStateManager.cs` — `SetState` state transitions, singleton behavior
 
 **Integration / Play Mode Tests:**
@@ -164,9 +145,6 @@ Unity Editor → Edit → Project Settings → Code Coverage (requires com.unity
   - `Assets/Player/SkillBase.cs` — `TryUse` → coroutine flow → cooldown reset (requires `yield return`)
   - `Assets/Enemy/EnemyAI.cs` — state machine transitions over multiple frames
 
-**E2E Tests:**
-- Not used. No scene-level test framework configured.
-
 ## Common Patterns
 
 **Async / Coroutine Testing:**
@@ -174,9 +152,8 @@ Unity Editor → Edit → Project Settings → Code Coverage (requires com.unity
 [UnityTest]
 public IEnumerator DashCoroutine_SetsIsDashingTrue_ThenFalseAfterDuration()
 {
-    // Requires Play Mode — physics scene needed
+    // Requires Play Mode
     var go       = new GameObject();
-    var rb       = go.AddComponent<Rigidbody2D>();
     var movement = go.AddComponent<PlayerMovement>();
     // ... initialize, call TryDash()
     yield return new WaitForSeconds(0.3f);
@@ -202,29 +179,6 @@ public void TakeDamage_WhenHpReachesZero_InvokesOnDeath()
     Object.DestroyImmediate(go);
 }
 ```
-
-**Error / Guard Testing:**
-```csharp
-[Test]
-public void SacrificeWater_WhenCostExceedsCurrentWater_ReturnsFalse()
-{
-    var go    = new GameObject();
-    var stats = go.AddComponent<PlayerWaterStats>();
-
-    bool result = stats.SacrificeWater(200f);  // exceeds default 100f max
-
-    Assert.IsFalse(result);
-    Object.DestroyImmediate(go);
-}
-```
-
-## Key Testability Notes
-
-- All stats classes (`PlayerWaterStats`, `PlayerStats`, `EnemyStats`) fire `System.Action` events — straightforward to assert in tests by subscribing a flag
-- Skills depend on `IPlayerContext` (interface) — fake implementations are cheap to write
-- `GameStateManager` singleton (`Instance`) must be cleared or guarded between tests to avoid cross-test contamination
-- `SkillBase.ExecuteSkill()` is `protected abstract IEnumerator` — skill behaviour is isolated and testable via Play Mode `[UnityTest]`
-- No dependency injection container — component wiring is via `GetComponent<>` in `Awake()`/`Start()`; use `AddComponent<>` in tests to replicate
 
 ---
 

@@ -1,105 +1,66 @@
 # Technology Stack
 
-**Analysis Date:** 2026-03-27
+**Analysis Date:** 2025-02-18
 
 ## Languages
 
 **Primary:**
-- C# 9.0 - All game logic scripts under `Assets/`
+- C# 12.0 - Core game logic and Unity scripts (`Assets/**/*.cs`)
 
 **Secondary:**
-- YAML - Unity asset serialization (`.asset`, `.prefab`, `.unity` files)
-- JSON - Package manifests (`Packages/manifest.json`, `Packages/packages-lock.json`)
+- HLSL - Shader programming (via Shader Graph, referenced in `Assets/Settings/Renderer2D.asset`)
 
 ## Runtime
 
 **Environment:**
-- Unity Engine 6000.3.11f1 (Unity 6 LTS)
-- Mono scripting backend
-- .NET Standard 2.1 target framework (`netstandard2.1`)
+- Unity 6 (Version: 6000.3.11f1)
 
 **Package Manager:**
 - Unity Package Manager (UPM)
-- Lockfile: present at `Packages/packages-lock.json`
+- Lockfile: `Packages/packages-lock.json` present
 
 ## Frameworks
 
 **Core:**
-- Unity 6 (`com.unity.modules.*`) - Game engine runtime, physics, audio, animation
-- Universal Render Pipeline (URP) 17.3.0 (`com.unity.render-pipelines.universal`) - 2D rendering pipeline configured at `Assets/UniversalRenderPipelineGlobalSettings.asset`
-
-**Input:**
-- Unity Input System 1.19.0 (`com.unity.inputsystem`) - New input system; actions defined in `Assets/InputSystem_Actions.inputactions`, generated C# wrapper at `Assets/InputSystem_Actions.cs`
-
-**2D Tooling:**
-- 2D Animation 13.0.4 (`com.unity.2d.animation`) - Skeletal/sprite animation
-- 2D Aseprite Importer 3.0.1 (`com.unity.2d.aseprite`) - Direct `.ase` file import
-- 2D PSD Importer 12.0.1 (`com.unity.2d.psdimporter`) - Photoshop file import
-- 2D Sprite 1.0.0 (`com.unity.2d.sprite`) - Core sprite handling
-- 2D Sprite Shape 13.0.0 (`com.unity.2d.spriteshape`) - Procedural 2D shapes
-- 2D Tilemap 1.0.0 + Extras 6.0.1 (`com.unity.2d.tilemap`, `com.unity.2d.tilemap.extras`) - Tile-based level building
-
-**UI:**
-- Unity UI (UGUI) 2.0.0 (`com.unity.ugui`) - Runtime UI components
-
-**Timeline / Visual Scripting:**
-- Timeline 1.8.11 (`com.unity.timeline`) - Cutscene/sequencing
-- Visual Scripting 1.9.10 (`com.unity.visualscripting`) - Node-based scripting (present but usage in custom scripts not detected)
+- Universal Render Pipeline (URP) 17.3.0 - Rendering and graphics (`Assets/Settings/UniversalRP.asset`)
+- Unity UI (uGUI) 2.0.0 - User Interface system
+- Unity Input System 1.19.0 - Modern input handling (`Assets/InputSystem_Actions.inputactions`)
 
 **Testing:**
-- Unity Test Framework 1.6.0 (`com.unity.test-framework`) - Unit/integration test runner
+- Unity Test Framework 1.6.0 - Testing runner (`Assets/Tests/`)
+- NUnit - Assertion library used in tests
 
-**Multiplayer (infrastructure only):**
-- Multiplayer Center 1.0.1 (`com.unity.multiplayer.center`) - Multiplayer setup helper; multiplayer roles disabled in `ProjectSettings/MultiplayerManager.asset`
+**Build/Dev:**
+- Unity Editor 6000.3.11f1
 
-## Key Dependencies (transitive, critical)
+## Key Dependencies
 
-**Performance:**
-- Burst Compiler (via `com.unity.2d.common` dependency) - SIMD/native code compilation for hot paths
-- Unity Collections 2.4.3 (via `com.unity.2d.animation`) - High-performance native containers
-- Unity Mathematics 1.2.6 (via `com.unity.2d.aseprite`) - SIMD-friendly math library
+**Critical:**
+- `com.unity.render-pipelines.universal` - Provides the 2D renderer and lighting
+- `com.unity.inputsystem` - Handles player controls and input mapping
+- `com.unity.ugui` / TextMeshPro - UI rendering and layout
 
-**IDE Integration:**
-- Rider Integration 3.0.39 (`com.unity.ide.rider`) - JetBrains Rider support
-- Visual Studio Integration 2.0.26 (`com.unity.ide.visualstudio`) - VS support; Unity Analyzers DLL loaded from `C:\Users\MSI\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.1\`
-
-**Source Control:**
-- Collaborate Proxy 2.11.4 (`com.unity.collab-proxy`) - Unity Version Control (Plastic SCM) stub; project uses Git instead
+**Infrastructure:**
+- `com.unity.2d.animation` - 2D skeletal animation support
+- `com.unity.2d.tilemap` - 2D world building
 
 ## Configuration
 
 **Environment:**
-- No `.env` files detected
-- No runtime environment variable configuration
-- Game is self-contained; all configuration via Unity Inspector (serialized `.asset` and `.prefab` files)
+- Unity Project Settings (`ProjectSettings/*.asset`)
+- URP Asset (`Assets/Settings/UniversalRP.asset`)
 
 **Build:**
-- Solution file: `My project.sln` / `My project.slnx`
-- C# project file (generated): `Assembly-CSharp.csproj`
-- Build target: `StandaloneWindows64` (Windows PC, 64-bit)
-- Output resolution: 1920x1080 default
-- Color space: Linear (`m_ActiveColorSpace: 1`)
-- Application ID: `com.DefaultCompany.2D-URP`
-- Product name: `BleedingSpring`
-- Company: `DefaultCompany` (placeholder, not updated)
-
-**Editor IDEs:**
-- VS Code with Unity extension (`visualstudiotoolsforunity.vstuc-1.2.1`) configured in `.vscode/`
-- Visual Studio with `Microsoft.VisualStudio.Workload.ManagedGame` workload (`.vsconfig`)
-- JetBrains Rider also supported via UPM package
+- Unity Build Settings (configured in Editor)
 
 ## Platform Requirements
 
 **Development:**
-- Windows OS (project configured for StandaloneWindows64)
-- Unity Hub with Unity 6000.3.11f1 installed
-- .NET Standard 2.1 compatible IDE (Visual Studio 2022, Rider, or VS Code with Unity extension)
+- Windows/macOS/Linux with Unity 6 installed
 
 **Production:**
-- Target: Windows PC standalone (64-bit)
-- Android build settings present (`AndroidMinSdkVersion: 25`) but not the primary target
-- No web, console, or mobile builds configured as primary
+- Target platforms: PC, Mac & Linux Standalone (based on default Unity project structure)
 
 ---
 
-*Stack analysis: 2026-03-27*
+*Stack analysis: 2025-02-18*

@@ -14,10 +14,13 @@ public class EnemyWorldSpaceUI : PlayerHUDBar
 {
     [Header("Enemy HUD References")]
     [SerializeField] private CanvasGroup canvasGroup;
+    [SerializeField] protected Image hpFillImage; // New: HP Fill image
 
     [Header("Enemy Visual Settings")]
     [SerializeField] private float fadeInDuration = 0.15f;
     [SerializeField] private Color sweetSpotGlowColor = Color.white;
+    [SerializeField] private Color hpHealthyColor = new Color(0.25f, 0.72f, 0.35f); // #40B859
+    [SerializeField] private Color hpLowColor = new Color(0.85f, 0.22f, 0.22f);     // #D93838
 
     private EnemyStats _enemyStats;
     private bool _revealed;
@@ -76,11 +79,13 @@ public class EnemyWorldSpaceUI : PlayerHUDBar
         if (_enemyStats != null && _enemyStats != stats) Unbind();
 
         _enemyStats = stats;
+        _enemyStats.OnHpChanged         += HandleHpChanged;
         _enemyStats.OnCorruptionChanged += HandleEnemyCorruptionChanged;
         _enemyStats.OnDamaged           += HandleFirstDamage;
         _enemyStats.OnDeath             += HandleDeath;
 
         // Initial setup
+        HandleHpChanged(_enemyStats.CurrentHp, _enemyStats.MaxHp);
         HandleEnemyCorruptionChanged(_enemyStats.CurrentCorruption, _enemyStats.MaxCorruption);
         
         _revealed = false;
@@ -89,10 +94,24 @@ public class EnemyWorldSpaceUI : PlayerHUDBar
     public void Unbind()
     {
         if (_enemyStats == null) return;
+        _enemyStats.OnHpChanged         -= HandleHpChanged;
         _enemyStats.OnCorruptionChanged -= HandleEnemyCorruptionChanged;
         _enemyStats.OnDamaged           -= HandleFirstDamage;
         _enemyStats.OnDeath             -= HandleDeath;
         _enemyStats = null;
+    }
+
+    private void HandleHpChanged(float current, float max)
+    {
+        if (max <= 0f) return;
+
+        float hpRatio = Mathf.Clamp01(current / max);
+        
+        if (hpFillImage != null)
+        {
+            hpFillImage.fillAmount = hpRatio;
+            hpFillImage.color = Color.Lerp(hpLowColor, hpHealthyColor, hpRatio);
+        }
     }
 
     private void HandleEnemyCorruptionChanged(float current, float max)
@@ -102,14 +121,11 @@ public class EnemyWorldSpaceUI : PlayerHUDBar
         float corruptionRatio = Mathf.Clamp01(current / max);
         
         // D-02: Container height shrinks with Current Corruption
-        // We use base.HandleMainChanged to set the scale based on corruptionRatio
         base.HandleMainChanged(current, max);
 
         // D-03: Purification Fill rises from bottom. 
-        // Logic: FillAmount = (Max - Current) / Current (relative to current container)
         float purifiedAmount = max - current;
         
-        // We set cached values so base.UpdateFill() can use them
         _cachedCurrentValue = current;
         _cachedSubValue = purifiedAmount;
 

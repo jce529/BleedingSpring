@@ -5,6 +5,7 @@ public enum EnemyState
     Patrol,  // 순찰 — 좌우로 왕복 이동
     Chase,   // 추격 — 감지 범위 내 플레이어를 따라감
     Attack,  // 공격 — 공격 범위 내 플레이어를 공격
+    Windup,  // 공격 예비동작 — 패링 가능 타이밍 창
     Hit,     // 피격 경직 — 짧은 시간 동작 중단
     Dead     // 사망 — EnemyStats가 처리(Die/Purify)
 }

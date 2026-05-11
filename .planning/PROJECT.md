@@ -12,49 +12,44 @@ Bleeding Spring은 Unity 6 (2D URP) + C#으로 제작 중인 2D 하드코어 액
 **Sweet Spot 정화 메커닉** — 적의 오염도 게이지 위에 Sweet Spot 범위를 시각적으로 명확히 표시해,
 플레이어가 자원(물)과 오염도를 전략적으로 조율하는 긴장감 있는 의사결정을 체험할 수 있어야 한다.
 
-## Current Milestone: v1.0 UI 시스템 구축
+## Current Milestone: v1.0 UI 시스템 구축 (Completed)
 
-**Goal:** 게임의 핵심 전투 정보(플레이어 오염도, 적 HP/Sweet Spot, 보스 HP)를 실시간으로 시각화하는 UI 인프라를 구축한다.
-
-**Target features:**
-- 플레이어 HUD — 오염도 바(위험 경고 포함), 워터 티어(0~3단계), 위험 비네트
-- 적 월드 스페이스 UI — HP 바 + 오염도 바 + Sweet Spot 구간 하이라이트
-- 보스 전용 UI — 화면 하단 Screen Space HP 바 + 이름 텍스트
-- 기술 전제조건 — ISkill 쿨다운 프로퍼티, OnHpChanged 이벤트, Bind/Unbind 패턴
+**Goal:** 게임의 핵심 전투 정보(플레이어 오염도, 적 HP/Sweet Spot, 보스 HP)를 실시간으로 시각화하는 UI 인프라를 구축한다. (2026-05-11 완료)
 
 ## Requirements
 
 ### Validated
 
-*기존 코드베이스에서 구현 확인된 기능들*
+*기존 코드베이스 및 Milestone v1.0에서 구현 확인된 기능들*
 
-- ✓ 플레이어 이동 (좌우 이동, 점프, 대시 + 잔상 VFX) — 기존 코드베이스
-- ✓ 입력 시스템 (Unity Input System, `InputHandler`) — 기존 코드베이스
-- ✓ 이중 자원 시스템 (맑은 물 HP + 오염도 Corruption, `PlayerWaterStats`) — 기존 코드베이스
-- ✓ 워터 티어 시스템 (0~3단계, O키 전환, 스킬 위력/오염도 출력 조절) — 기존 코드베이스
-- ✓ 스킬 3종 (기본 공격, 광역 베기, 투사체) + `ISkill` 인터페이스 — 기존 코드베이스
-- ✓ 적 AI FSM (Idle/Patrol/Chase/Attack/Hit/Dead) + `IDamageable` — 기존 코드베이스
-- ✓ 적 이중 자원 (HP + 오염도) 및 Sweet Spot 정화/파괴 로직 (`EnemyStats`) — 기존 코드베이스
-- ✓ 정화된 적의 NPC 변환 (`PurifiedNPC`) — 기존 코드베이스
-- ✓ 게임 상태 관리 (Playing/Paused/GameOver/GameClear, `GameStateManager`) — 기존 코드베이스
+- ✓ 플레이어 이동 (좌우 이동, 점프, 대시 + 잔상 VFX)
+- ✓ 입력 시스템 (Unity Input System, `InputHandler`)
+- ✓ 이중 자원 시스템 (맑은 물 HP + 오염도 Corruption, `PlayerWaterStats`)
+- ✓ 워터 티어 시스템 (0~3단계, O키 전환, 스킬 위력/오염도 출력 조절)
+- ✓ 스킬 3종 (기본 공격, 광역 베기, 투사체) + `ISkill` 인터페이스
+- ✓ 적 AI FSM (Idle/Patrol/Chase/Attack/Hit/Dead) + `IDamageable`
+- ✓ 적 이중 자원 (HP + 오염도) 및 Sweet Spot 정화/파괴 로직 (`EnemyStats`)
+- ✓ 정화된 적의 NPC 변환 (`PurifiedNPC`)
+- ✓ 게임 상태 관리 (Playing/Paused/GameOver/GameClear, `GameStateManager`)
+- ✓ **[v1.0] 플레이어 HUD**: 오염도 바, 워터 티어 표시기, 위험 비네트
+- ✓ **[v1.0] 적 월드 스페이스 UI**: HP 바 + 오염도 바 + Sweet Spot 시각화
+- ✓ **[v1.0] 보스 전용 UI**: 우측 고정 Screen Space HUD 바 + 이름 + 페이즈 표시
+- ✓ **[v1.0] 태세 시스템**: 메인/보조 태세 전환 및 스킬 배율(Multiplier) 적용
 
 ### Active
 
-*현재 마일스톤에서 구축할 기능들*
+*다음 마일스톤(v2.0)에서 구축할 기능들*
 
-**[Phase 1] UI 시스템**
-- [ ] 플레이어 HUD: HP 바 (맑은 물), 오염도 바 — 실시간 이벤트 연동
-- [ ] 플레이어 HUD: 워터 티어 표시기 (현재 0~3단계)
-- [ ] 적 월드 스페이스 UI: HP 바 + 오염도 바 (적 머리 위 추종)
-- [ ] **Sweet Spot 시각화**: 오염도 바 위에 정화 유효 범위를 색상 구간으로 표시
-- [ ] 보스 전용 UI: 화면 하단 고정 대형 HP 바 (Screen Space)
-- [ ] 스킬 쿨다운 UI: 스킬별 쿨다운 진행 표시
-
-**[Phase 2+] 게임플레이 확장**
+**[Phase 1] 게임플레이 확장**
 - [ ] 던전/맵 기반 런 구조 (룸 이동 → 전투 → 보상 → 보스)
 - [ ] 로그라이크 진행 시스템: 런 내 아이템/능력 획득
 - [ ] 정화/파괴 누적 카운터 → 스토리 분기 / 맵 변화
 - [ ] 메타 진행 (런 간 영구 업그레이드)
+
+**[Phase 2] UI 폴리시 및 피드백**
+- [ ] 스킬 쿨다운 UI: 스킬별 쿨다운 진행 표시
+- [ ] 적 처치 결과 피드백: "PURIFIED" / "DESTROYED" 텍스트 연출
+- [ ] 오염도 100% 도달 시 시각적 경고 애니메이션 강화
 
 ### Out of Scope
 

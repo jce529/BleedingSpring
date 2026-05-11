@@ -27,6 +27,9 @@ public class BasicAttackSkill : SkillBase
     {
         float clipLen = GetClipLength("HeroKnight_Attack1");
         if (clipLen > 0f) cooldownDuration = clipLen;
+
+        // [J] 기본 공격의 기본 소모량 설정
+        hpCostPerStage = new float[] { 1f, 3f, 7f, 15f };
     }
 
     protected override IEnumerator ExecuteSkill()
@@ -35,10 +38,10 @@ public class BasicAttackSkill : SkillBase
         Vector2 size   = new Vector2(width, boxHeight);
         Vector2 center = GetFrontBoxCenter(width);
 
-        Debug.Log($"[J] {StageName[Stage]} — 박스: {width:F2}×{boxHeight:F2} | 데미지: {baseDamage * effectMultiplier:F0}");
+        Debug.Log($"[J] {StageName[Stage]} — 박스: {width:F2}×{boxHeight:F2} | 데미지: {baseDamage * GetFinalEffectMultiplier():F0}");
         ShowBoxIndicator(center, size);
 
-        int hits = DamageBox(center, size, baseDamage * effectMultiplier);
+        int hits = DamageBox(center, size, baseDamage * GetFinalEffectMultiplier());
         Debug.Log($"[J] 1차 적중: {hits}명");
 
         // 3단계: 잔상 추가 타격
@@ -46,8 +49,8 @@ public class BasicAttackSkill : SkillBase
         {
             yield return new WaitForSeconds(0.1f);
             ShowBoxIndicator(center, size);
-            int echoHits = DamageBox(center, size, baseDamage * effectMultiplier * 0.5f);
-            Debug.Log($"[J] 잔상 추가 적중: {echoHits}명 | 데미지: {baseDamage * effectMultiplier * 0.5f:F0}");
+            int echoHits = DamageBox(center, size, baseDamage * GetFinalEffectMultiplier() * 0.5f);
+            Debug.Log($"[J] 잔상 추가 적중: {echoHits}명 | 데미지: {baseDamage * GetFinalEffectMultiplier() * 0.5f:F0}");
         }
 
         yield break;

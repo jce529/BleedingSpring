@@ -2,100 +2,115 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// World Space 세로 HUD 바: 물(아래→위) + 오염(아래→위, 물의 하단부에 표시) 이중 채움 + 워터 티어 구슬 3개.
-/// 플레이어 자식 오브젝트에 부착합니다.
+/// World Space HUD bar attached to the player.
+/// Implementation: "Shrinking Survival Container"
+/// The entire bar container (containerRect) scales vertically based on Current Water (HP).
+/// The corruption fills up from the bottom relative to the current container height.
 /// </summary>
 public class PlayerHUDBar : MonoBehaviour
 {
-    [Header("Bar Fill Images")]
-    [SerializeField] private Image waterFillImage;
-    [SerializeField] private Image corruptionFillImage;
+    [Header("Container & Fill")]
+    [Tooltip("The RectTransform that will be scaled vertically based on current water.")]
+    [SerializeField] protected RectTransform containerRect;
+    [SerializeField] protected Image corruptionFillImage;
+    [SerializeField] protected Image waterBackgroundFillImage; // Optional: The 'water' part of the shrinking bar
 
-    [Header("Water Tier Orbs (3 Images)")]
-    [SerializeField] private Image[] orbImages = new Image[3];
+    [Header("Colors & Animation")]
+    [SerializeField] protected Color warningColor = Color.red;
+    [SerializeField] protected float pulseSpeed = 10f;
 
-    [Header("Orb Colors")]
-    [SerializeField] private Color litColor = new Color(0.4f, 0.85f, 1f, 1f);
-    [SerializeField] private Color dimColor = new Color(0.2f, 0.2f, 0.25f, 0.5f);
+    protected PlayerWaterStats _stats;
+    protected float _cachedCurrentValue; // Renamed from _cachedCurrentWater for generality
+    protected float _cachedMaxValue;     // Renamed from _cachedMaxWater
+    protected float _cachedSubValue;     // Renamed from _cachedCorruption (e.g. corruption for player, purification for enemy)
+    protected Color _originalCorruptionColor;
 
-    private PlayerWaterStats _stats;
-    private float _cachedCurrentWater;
-    private float _cachedMaxWater;
-    private float _cachedCorruption;
-
-    private void Awake()
+    protected virtual void Awake()
     {
         _stats = GetComponentInParent<PlayerWaterStats>();
+        if (corruptionFillImage != null)
+            _originalCorruptionColor = corruptionFillImage.color;
     }
 
-    private void Start()
+    protected virtual void Start()
     {
         if (_stats == null)
         {
-            Debug.LogWarning("[PlayerHUDBar] PlayerWaterStats not found in parent hierarchy.");
+            // Only log if this is exactly PlayerHUDBar, subclasses might bind differently
+            if (GetType() == typeof(PlayerHUDBar))
+                Debug.LogWarning("[PlayerHUDBar] PlayerWaterStats not found in parent hierarchy.");
             return;
         }
 
-        _stats.OnWaterChanged      += HandleWaterChanged;
-        _stats.OnCorruptionChanged += HandleCorruptionChanged;
-        _stats.OnWaterTierChanged  += HandleWaterTierChanged;
+        _stats.OnWaterChanged      += HandleMainChanged;
+        _stats.OnCorruptionChanged += HandleSubChanged;
 
         // Initialize with current values
-        HandleWaterChanged(_stats.CurrentCleanWater, _stats.MaxCleanWater);
-        HandleCorruptionChanged(_stats.CurrentCorruption, _stats.maxCorruptionThreshold);
-        HandleWaterTierChanged(_stats.WaterTier);
+        HandleMainChanged(_stats.CurrentCleanWater, _stats.MaxCleanWater);
+        HandleSubChanged(_stats.CurrentCorruption, _stats.maxCorruptionThreshold);
     }
 
-    private void OnDestroy()
+    protected virtual void OnDestroy()
     {
         if (_stats == null) return;
-        _stats.OnWaterChanged      -= HandleWaterChanged;
-        _stats.OnCorruptionChanged -= HandleCorruptionChanged;
-        _stats.OnWaterTierChanged  -= HandleWaterTierChanged;
+        _stats.OnWaterChanged      -= HandleMainChanged;
+        _stats.OnCorruptionChanged -= HandleSubChanged;
     }
 
-    private void HandleWaterChanged(float current, float max)
+    protected virtual void Update()
     {
-        _cachedCurrentWater = current;
-        _cachedMaxWater     = max;
+        UpdatePulseEffect();
+    }
 
-        // 물 바: 전체 최대치 대비 현재 물의 양을 아래서부터 채웁니다.
-        if (waterFillImage != null)
+    protected virtual void UpdatePulseEffect()
+    {
+        // Warning triggers when SubValue / MainValue >= 80%
+        float ratio = (_cachedCurrentValue > 0f) ? Mathf.Clamp01(_cachedSubValue / _cachedCurrentValue) : 1f;
+
+        if (ratio >= 0.8f && corruptionFillImage != null)
         {
-            waterFillImage.fillMethod = Image.FillMethod.Vertical;
-            waterFillImage.fillOrigin = (int)Image.OriginVertical.Bottom;
-            waterFillImage.fillAmount = (max > 0f) ? (current / max) : 0f;
+            float t = Mathf.PingPong(Time.time * pulseSpeed, 1f);
+            corruptionFillImage.color = Color.Lerp(_originalCorruptionColor, warningColor, t);
+        }
+        else if (corruptionFillImage != null)
+        {
+            corruptionFillImage.color = _originalCorruptionColor;
+        }
+    }
+
+    protected virtual void HandleMainChanged(float current, float max)
+    {
+        _cachedCurrentValue = current;
+        _cachedMaxValue     = max;
+
+        // Step 1: Shrink/Expand the entire container
+        if (containerRect != null)
+        {
+            float heightRatio = (max > 0f) ? (current / max) : 0f;
+            containerRect.localScale = new Vector3(1f, heightRatio, 1f);
         }
 
-        // 물의 양이 변하면 오염도 비율(전체 대비)도 다시 계산되어야 하므로 호출
-        UpdateCorruptionFill();
-    }
-
-    private void HandleCorruptionChanged(float current, float max)
-    {
-        _cachedCorruption = current;
-        UpdateCorruptionFill();
-    }
-
-    private void UpdateCorruptionFill()
-    {
-        if (corruptionFillImage == null || _cachedMaxWater <= 0f) return;
-
-        // 오염도: 아래서부터 전체 바의 최대치 대비 비율로 채웁니다.
-        // 이렇게 하면 물 바의 아래쪽 일부가 오염된 것처럼 시각적으로 나타납니다.
-        corruptionFillImage.fillMethod = Image.FillMethod.Vertical;
-        corruptionFillImage.fillOrigin = (int)Image.OriginVertical.Bottom;
-
-        float ratio = Mathf.Clamp01(_cachedCorruption / _cachedMaxWater);
-        corruptionFillImage.fillAmount = ratio;
-    }
-
-    private void HandleWaterTierChanged(int tier)
-    {
-        for (int i = 0; i < orbImages.Length; i++)
+        // Step 2: Update the background fill if present
+        if (waterBackgroundFillImage != null)
         {
-            if (orbImages[i] != null)
-                orbImages[i].color = (i < tier) ? litColor : dimColor;
+            waterBackgroundFillImage.fillAmount = 1f;
         }
+        
+        UpdateFill();
+    }
+
+    protected virtual void HandleSubChanged(float current, float max)
+    {
+        _cachedSubValue = current;
+        UpdateFill();
+    }
+
+    protected virtual void UpdateFill()
+    {
+        if (corruptionFillImage == null) return;
+
+        // Step 3: Fill sub-value RELATIVE to the current container height
+        float relativeRatio = (_cachedCurrentValue > 0f) ? Mathf.Clamp01(_cachedSubValue / _cachedCurrentValue) : 1f;
+        corruptionFillImage.fillAmount = relativeRatio;
     }
 }

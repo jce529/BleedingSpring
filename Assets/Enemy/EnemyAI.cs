@@ -26,6 +26,7 @@ public class EnemyAI : MonoBehaviour
     [Header("타이머")]
     [SerializeField] private float idleDuration    = 2f;
     [SerializeField] private float attackCooldown  = 1.5f;
+    [SerializeField] private float windupDuration  = 0.6f;   // 공격 예비동작 — 패링 가능 창
     [SerializeField] private float hitStunDuration = 0.25f;
 
     // ─── 공개 상태 ───────────────────────────────────────────────────────────
@@ -57,12 +58,16 @@ public class EnemyAI : MonoBehaviour
         rb          = GetComponent<Rigidbody2D>();
         sr          = GetComponent<SpriteRenderer>();
         patrolCenter = transform.position;
+        OnInitialize();
     }
+
+    /// <summary>하위 클래스에서 추가 초기화가 필요하면 사용합니다.</summary>
+    protected virtual void OnInitialize() { }
 
     private void Start()
     {
-        var player = FindFirstObjectByType<PlayerController>();
-        if (player != null) playerTransform = player.transform;
+        if (PlayerController.Instance != null) 
+            playerTransform = PlayerController.Instance.transform;
 
         stats.OnDamaged += HandleHit;
         stats.OnDeath   += HandleDeath;
@@ -92,19 +97,20 @@ public class EnemyAI : MonoBehaviour
             case EnemyState.Patrol: UpdatePatrol(); break;
             case EnemyState.Chase:  UpdateChase();  break;
             case EnemyState.Attack: UpdateAttack(); break;
+            case EnemyState.Windup: UpdateWindup(); break;
             case EnemyState.Hit:    UpdateHit();    break;
         }
     }
 
     // ─── 상태별 업데이트 ─────────────────────────────────────────────────────
 
-    private void UpdateIdle()
+    protected virtual void UpdateIdle()
     {
         if (PlayerInRange(detectionRadius)) { ChangeState(EnemyState.Chase);  return; }
         if (stateTimer >= idleDuration)     { ChangeState(EnemyState.Patrol); }
     }
 
-    private void UpdatePatrol()
+    protected virtual void UpdatePatrol()
     {
         if (PlayerInRange(detectionRadius)) { ChangeState(EnemyState.Chase); return; }
 
@@ -120,7 +126,7 @@ public class EnemyAI : MonoBehaviour
         Move(patrolDir);
     }
 
-    private void UpdateChase()
+    protected virtual void UpdateChase()
     {
         if (playerTransform == null) { ChangeState(EnemyState.Idle); return; }
 
@@ -131,24 +137,79 @@ public class EnemyAI : MonoBehaviour
         Move(playerTransform.position.x > transform.position.x ? 1f : -1f);
     }
 
-    private void UpdateAttack()
+    protected virtual void UpdateAttack()
     {
         StopHorizontal();
 
-        if (playerTransform == null)          { ChangeState(EnemyState.Idle);  return; }
+        if (playerTransform == null)              { ChangeState(EnemyState.Idle);  return; }
         if (DistToPlayer() > attackRadius * 1.4f) { ChangeState(EnemyState.Chase); return; }
 
         if (attackTimer >= attackCooldown)
         {
             attackTimer = 0f;
-            enemyAttack?.AttackPlayer();
+            ChangeState(EnemyState.Windup);   // 즉시 타격 대신 예비동작 진입
         }
     }
+
+    protected virtual void UpdateWindup()
+    {
+        StopHorizontal();
+
+        // 예비동작 중 플레이어가 멀어지면 취소
+        if (playerTransform == null || DistToPlayer() > attackRadius * 2f)
+        {
+            ChangeState(EnemyState.Chase);
+            return;
+        }
+
+        if (stateTimer >= windupDuration)
+        {
+            enemyAttack?.AttackPlayer();
+            ChangeState(EnemyState.Attack);
+        }
+    }
+
+    [Header("전술적 AI")]
+    [SerializeField] private float backstepForce    = 5f;
+    [SerializeField] private float backstepDuration = 0.2f;
+    [Range(0f, 1f)]
+    [SerializeField] private float backstepChance   = 0.6f;
+
+    // ... (기타 필드 생략)
 
     private void UpdateHit()
     {
         if (stateTimer >= hitStunDuration)
-            ChangeState(EnemyState.Chase);
+        {
+            // 경직 종료 시 플레이어가 너무 가까우면 일정 확률로 후퇴
+            if (PlayerInRange(attackRadius * 1.5f) && Random.value < backstepChance)
+            {
+                StartCoroutine(BackstepCoroutine());
+            }
+            else
+            {
+                ChangeState(EnemyState.Chase);
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator BackstepCoroutine()
+    {
+        ChangeState(EnemyState.Idle); // 잠시 이동 제어권 해제
+        
+        float dir = playerTransform.position.x > transform.position.x ? -1f : 1f;
+        float elapsed = 0f;
+
+        while (elapsed < backstepDuration)
+        {
+            rb.linearVelocity = new Vector2(dir * backstepForce, rb.linearVelocity.y);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        StopHorizontal();
+        yield return new WaitForSeconds(0.1f);
+        ChangeState(EnemyState.Chase);
     }
 
     // ─── 상태 전환 ───────────────────────────────────────────────────────────
@@ -162,6 +223,15 @@ public class EnemyAI : MonoBehaviour
             StopHorizontal();
 
         Debug.Log($"[EnemyAI] {gameObject.name} → {next}");
+    }
+
+    // ─── 공개 API ────────────────────────────────────────────────────────────
+
+    /// <summary>패링 성공 시 외부에서 강제 경직을 부여합니다.</summary>
+    public void ForceHitStun()
+    {
+        if (CurrentState == EnemyState.Dead) return;
+        ChangeState(EnemyState.Hit);
     }
 
     // ─── 이벤트 콜백 ─────────────────────────────────────────────────────────

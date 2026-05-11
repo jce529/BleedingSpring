@@ -14,6 +14,8 @@ public class BossHUDBar : PlayerHUDBar
 {
     [Header("Boss UI References")]
     [SerializeField] private TextMeshProUGUI bossNameText;
+    [SerializeField] private TextMeshProUGUI phaseText;   // 신규: 페이즈 표시
+    [SerializeField] private RectTransform sweetSpotGuide; // 신규: 동적 범위 가이드 UI
     [SerializeField] private CanvasGroup canvasGroup;
 
     private BossStats _bossStats;
@@ -21,15 +23,11 @@ public class BossHUDBar : PlayerHUDBar
 
     protected override void Awake()
     {
-        // BossHUDBar is usually not a child of Boss, so it will be bound manually or by finding the boss.
         if (canvasGroup != null) canvasGroup.alpha = 0f;
         if (corruptionFillImage != null)
             _originalCorruptionColor = corruptionFillImage.color;
-    }
-
-    protected override void Start()
-    {
-        // Do nothing in Start, wait for Bind()
+        
+        if (phaseText != null) phaseText.text = "PHASE 1";
     }
 
     public void Bind(BossStats stats)
@@ -38,55 +36,81 @@ public class BossHUDBar : PlayerHUDBar
 
         _bossStats = stats;
         _bossStats.OnCorruptionChanged += HandleBossCorruptionChanged;
+        _bossStats.OnPhaseChanged      += HandlePhaseChanged; // 페이즈 구독
 
         if (bossNameText != null)
             bossNameText.text = _bossStats.BossName;
 
-        // Initial update
+        // 초기 업데이트
         HandleBossCorruptionChanged(_bossStats.CurrentCorruption, _bossStats.MaxCorruption);
+        HandlePhaseChanged(_bossStats.CurrentPhase);
     }
 
     public void Unbind()
     {
         if (_bossStats == null) return;
         _bossStats.OnCorruptionChanged -= HandleBossCorruptionChanged;
+        _bossStats.OnPhaseChanged      -= HandlePhaseChanged;
         _bossStats = null;
     }
 
-    protected override void OnDestroy()
+    private void HandlePhaseChanged(int phase)
     {
-        Unbind();
+        if (phaseText != null)
+            phaseText.text = $"PHASE {phase}";
+        
+        // 페이즈 전환 시 UI 연출 (예: 흔들림 효과 등 나중에 추가 가능)
+        Debug.Log($"[BossUI] UI 페이즈 업데이트: {phase}");
     }
 
     protected override void UpdatePulseEffect()
     {
-        // D-BOSS-08: Sweet Spot Pulse
+        // Sweet Spot 맥동 효과
         if (_isInSweetSpot && corruptionFillImage != null)
         {
             float pulse = (Mathf.Sin(Time.time * pulseSpeed) + 1f) / 2f;
-            // Use warningColor as the glow target color (or we could add a specific bossGlowColor)
             corruptionFillImage.color = Color.Lerp(_originalCorruptionColor, warningColor, pulse * 0.5f + 0.3f);
         }
         else if (corruptionFillImage != null)
         {
             corruptionFillImage.color = _originalCorruptionColor;
         }
+
+        // [추가] 동적 범위 가이드 UI 크기 조절
+        UpdateSweetSpotGuide();
+    }
+
+    private void UpdateSweetSpotGuide()
+    {
+        if (sweetSpotGuide == null || _bossStats == null) return;
+
+        // BossStats의 동적 범위 계산 로직을 UI에 투영
+        float hpPercent = Mathf.Clamp01(_bossStats.CurrentHp / _bossStats.MaxHp);
+        float shrinkFactor = 1f - hpPercent;
+        float center = (_bossStats.basePurificationMin + _bossStats.basePurificationMax) * 0.5f;
+
+        float currentMin = Mathf.Lerp(_bossStats.basePurificationMin - _bossStats.bonusPurificationMargin, center - 0.05f, shrinkFactor);
+        float currentMax = Mathf.Lerp(_bossStats.basePurificationMax + _bossStats.bonusPurificationMargin, center + 0.05f, shrinkFactor);
+
+        // UI 상에서 가이드 영역의 위치와 크기 설정 (Vertical Bar 기준이라 가정)
+        // anchorMin.y와 anchorMax.y를 이용해 가이드 박스 표시
+        sweetSpotGuide.anchorMin = new Vector2(0f, currentMin);
+        sweetSpotGuide.anchorMax = new Vector2(1f, currentMax);
     }
 
     private void HandleBossCorruptionChanged(float current, float max)
     {
         if (max <= 0f) return;
 
-        // Container scale Y = Current / Max
         HandleMainChanged(current, max);
 
-        // SubValue = Purified Amount (Max - Current)
+        // SubValue = 현재 채워진 정화량 (과거의 오염도에서 깎인 만큼)
+        // 세계관상 몬스터는 MaxCorruption에서 시작해서 0으로 가는 구조
         float purifiedAmount = max - current;
         _cachedSubValue = purifiedAmount;
 
         UpdateFill();
         
-        // Update Sweet Spot flag for pulse effect
         if (_bossStats != null)
             _isInSweetSpot = _bossStats.IsInPurificationRange;
     }

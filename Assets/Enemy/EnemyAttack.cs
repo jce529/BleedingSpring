@@ -14,13 +14,21 @@ public class EnemyAttack : MonoBehaviour
     // ─── Inspector 설정 ───────────────────────────────────────────────────────
 
     [Header("공격 설정")]
-    [Tooltip("공격 1회에 소모할 자신의 체력량. 플레이어에게 전달되는 데미지이기도 합니다.")]
+    [Tooltip("공격 1회에 소모할 자신의 체력량. 적도 물로 이루어진 존재이기 때문입니다.")]
     public float attackHpCost = 10f;
+
+    [Tooltip("플레이어에게 줄 실제 데미지 배율 (0.0 ~ 1.0). ")]
+    [Range(0f, 1f)]
+    public float playerDamageMultiplier = 0.5f;
 
     [Tooltip("플레이어에게 전이할 오염 비율 (0.0 ~ 1.0). " +
              "PlayerWaterStats.maxCorruptionThreshold 기준으로 계산됩니다.")]
     [Range(0f, 1f)]
     public float corruptionTransferRatio = 0.1f;
+
+    [Header("패링")]
+    [Tooltip("패링 성공 시 플레이어에게 회복할 HP량.")]
+    public float parryHealAmount = 10f;
 
     [Header("자동 탐지")]
     [Tooltip("씬에서 플레이어를 자동으로 찾습니다. 직접 연결하면 자동 탐지를 건너뜁니다.")]
@@ -28,23 +36,29 @@ public class EnemyAttack : MonoBehaviour
 
     // ─── 컴포넌트 참조 ───────────────────────────────────────────────────────
 
-    private EnemyStats stats;
+    private EnemyStats       stats;
+    private EnemyAI          enemyAI;
+    private PlayerController playerController;
 
     // ─── 초기화 ──────────────────────────────────────────────────────────────
 
     private void Awake()
     {
-        stats = GetComponent<EnemyStats>();
+        stats   = GetComponent<EnemyStats>();
+        enemyAI = GetComponent<EnemyAI>();
     }
 
     private void Start()
     {
-        // Inspector에서 직접 연결하지 않았다면 씬에서 자동 탐색
-        if (playerStats == null)
-            playerStats = FindFirstObjectByType<PlayerWaterStats>();
+        // 싱글톤을 통한 효율적인 참조
+        if (playerStats == null && PlayerController.Instance != null)
+        {
+            playerStats      = PlayerController.Instance.Stats;
+            playerController = PlayerController.Instance;
+        }
 
         if (playerStats == null)
-            Debug.LogWarning($"[EnemyAttack] {gameObject.name}: 씬에서 PlayerWaterStats를 찾지 못했습니다.");
+            Debug.LogWarning($"[EnemyAttack] {gameObject.name}: 플레이어를 찾지 못했습니다.");
     }
 
     // ─── 핵심 공개 API ───────────────────────────────────────────────────────
@@ -64,6 +78,9 @@ public class EnemyAttack : MonoBehaviour
             return;
         }
 
+        // [취약점 수정] 이미 사망하거나 정화된 적은 공격할 수 없음
+        if (stats.IsDead) return;
+
         if (playerStats == null)
         {
             Debug.LogWarning($"[EnemyAttack] {gameObject.name}: 공격 대상 플레이어가 없습니다.");
@@ -73,13 +90,25 @@ public class EnemyAttack : MonoBehaviour
         // 1. 자신의 HP 소모 (HP가 0 이하가 되면 Die() 자동 호출 — 정화 불가)
         stats.SpendHpOnAttack(attackHpCost);
 
-        // 2. 플레이어에게 데미지 + 오염도 전달
-        //    attackHpCost    → 플레이어 체력 감소량
-        //    corruptionTransferRatio → 플레이어 maxCorruptionThreshold 기준 오염 비율
-        playerStats.ReceiveAttack(attackHpCost, corruptionTransferRatio);
+        // 2. 패링 판정 — 플레이어가 0단계 패링 중이면 역류 처리
+        bool isParried = playerController != null
+                      && playerController.CurrentState == PlayerState.Parrying
+                      && playerController.Stats.WaterTier == 0;
+
+        if (isParried)
+        {
+            playerStats.Heal(parryHealAmount);
+            enemyAI?.ForceHitStun();
+            Debug.Log($"[EnemyAttack] {gameObject.name} — 패링 성공! 플레이어 HP +{parryHealAmount}");
+            return;
+        }
+
+        // 3. 일반 피격 — 플레이어에게 데미지 + 오염도 전달
+        float finalDamage = attackHpCost * playerDamageMultiplier;
+        playerStats.ReceiveAttack(finalDamage, corruptionTransferRatio);
 
         Debug.Log($"[EnemyAttack] {gameObject.name} 공격! " +
-                  $"데미지: {attackHpCost}, 오염 전이 비율: {corruptionTransferRatio * 100f:F0}%");
+                  $"데미지: {finalDamage} (배율: {playerDamageMultiplier}), 오염 전이 비율: {corruptionTransferRatio * 100f:F0}%");
     }
 
     /// <summary>
@@ -88,7 +117,8 @@ public class EnemyAttack : MonoBehaviour
     public void AttackPlayer(PlayerWaterStats target)
     {
         if (target == null) return;
-        playerStats = target;
+        playerStats      = target;
+        playerController = target.GetComponent<PlayerController>();
         AttackPlayer();
     }
 

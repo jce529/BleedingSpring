@@ -15,10 +15,19 @@ public class PurifiedNPC : MonoBehaviour
     // ─── Inspector 설정 ───────────────────────────────────────────────────────
 
     [Header("NPC 정보")]
-    [SerializeField] private string npcName = "정화된 존재";
+    public string npcName = "정화된 존재";
 
     [TextArea(2, 5)]
     [SerializeField] private string[] dialogueLines = { "...나를 구해줘서 고마워." };
+
+    // ... (중략)
+
+    /// <summary>외부(예: RiverEnemyStats)에서 대화 내용을 설정합니다.</summary>
+    public void SetDialogue(string[] lines)
+    {
+        dialogueLines = lines;
+        dialogueIndex = 0;
+    }
 
     [Header("상호작용")]
     [SerializeField] private float interactionRadius = 2f;

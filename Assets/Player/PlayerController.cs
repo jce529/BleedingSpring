@@ -10,6 +10,10 @@ using UnityEngine;
 [RequireComponent(typeof(InputHandler))]
 public class PlayerController : MonoBehaviour, IPlayerContext
 {
+    // ─── 싱글톤 ──────────────────────────────────────────────────────────────
+
+    public static PlayerController Instance { get; private set; }
+
     // ─── IPlayerContext 구현 ─────────────────────────────────────────────────
 
     public bool             FacingRight  => movement.FacingRight;
@@ -33,8 +37,6 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     private PlayerMovement movement;
     private InputHandler   inputHandler;
     private ISkill         basicAttack;
-    private ISkill         wideSlash;
-    private ISkill         projectile;
     private bool           isInvincible;
     private Animator       animator;
 
@@ -53,16 +55,22 @@ public class PlayerController : MonoBehaviour, IPlayerContext
 
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         Rigidbody    = GetComponent<Rigidbody2D>();
         Stats        = GetComponent<PlayerWaterStats>();
         movement     = GetComponent<PlayerMovement>();
         inputHandler = GetComponent<InputHandler>();
 
-        basicAttack = GetComponent<BasicAttackSkill>()  as ISkill;
-        wideSlash   = GetComponent<WideSlashSkill>()    as ISkill;
-        projectile  = GetComponent<ProjectileSkill>()   as ISkill;
-
         StanceManager = GetComponent<PlayerStanceManager>();
+
+        // 기본 공격 캐싱
+        basicAttack = GetComponent<BasicAttackSkill>() as ISkill;
 
         TryGetComponent(out animator);
     }
@@ -70,10 +78,7 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     private void Start()
     {
         movement.Initialize(this);
-
-        InitSkill(basicAttack);
-        InitSkill(wideSlash);
-        InitSkill(projectile);
+        basicAttack?.Initialize(this);
 
         StanceManager?.Initialize(this);
 
@@ -81,8 +86,8 @@ public class PlayerController : MonoBehaviour, IPlayerContext
         inputHandler.OnJump            += HandleJumpInput;
         inputHandler.OnDash            += HandleDashInput;
         inputHandler.OnBasicAttack     += HandleBasicAttackInput;
-        inputHandler.OnWideSlash       += HandleWideSlashInput;
-        inputHandler.OnProjectile      += HandleProjectileInput;
+        inputHandler.OnWideSlash       += HandleMainSkillInput;
+        inputHandler.OnProjectile      += HandleSubSkillInput;
         inputHandler.OnWaterTierSwitch += HandleWaterTierSwitchInput;
 
         Stats.OnDeath += HandleDeath;
@@ -96,8 +101,8 @@ public class PlayerController : MonoBehaviour, IPlayerContext
             inputHandler.OnJump            -= HandleJumpInput;
             inputHandler.OnDash            -= HandleDashInput;
             inputHandler.OnBasicAttack     -= HandleBasicAttackInput;
-            inputHandler.OnWideSlash       -= HandleWideSlashInput;
-            inputHandler.OnProjectile      -= HandleProjectileInput;
+            inputHandler.OnWideSlash       -= HandleMainSkillInput;
+            inputHandler.OnProjectile      -= HandleSubSkillInput;
             inputHandler.OnWaterTierSwitch -= HandleWaterTierSwitchInput;
         }
 
@@ -211,7 +216,10 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     {
         if (CurrentState == PlayerState.Dashing)  return;
         if (CurrentState == PlayerState.Attacking) return;
-        basicAttack?.TryUse();
+
+        // 슬롯 0: 기본 공격 (캐싱된 인스턴스 사용)
+        if (basicAttack == null) return;
+        basicAttack.TryUse();
 
         // 1초 이상 지나면 콤보 리셋
         if (Time.time - lastAttackTime > 1.0f)
@@ -223,29 +231,37 @@ public class PlayerController : MonoBehaviour, IPlayerContext
         animator?.SetTrigger("Attack" + attackCombo);
     }
 
-    private void HandleWideSlashInput()
+    private void HandleMainSkillInput()
     {
         if (CurrentState == PlayerState.Dashing)  return;
         if (CurrentState == PlayerState.Attacking) return;
-        wideSlash?.TryUse();
-        // WideSlash는 Attack1 애니메이션 사용 (별도 애니가 없으므로)
+
+        // 현재 활성 태세의 메인 스킬 호출
+        ISkill skill = StanceManager?.GetActiveMainSkill();
+        if (skill == null) return;
+
+        skill.TryUse();
         animator?.SetTrigger("Attack1");
     }
 
-    private void HandleProjectileInput()
+    private void HandleSubSkillInput()
     {
         if (CurrentState == PlayerState.Dashing)  return;
         if (CurrentState == PlayerState.Attacking) return;
         if (CurrentState == PlayerState.Dead)     return;
 
-        // 0단계: 패링 / 1~3단계: 원거리 스킬
+        // 0단계: 패링 / 1~3단계: 서브 스킬
         if (Stats.WaterTier == 0)
         {
             HandleParryInput();
         }
         else
         {
-            projectile?.TryUse();
+            // 현재 활성 태세의 서브 스킬 호출
+            ISkill skill = StanceManager?.GetActiveSubSkill();
+            if (skill == null) return;
+
+            skill.TryUse();
             animator?.SetTrigger("Attack2");
         }
     }
@@ -264,13 +280,6 @@ public class PlayerController : MonoBehaviour, IPlayerContext
     private void HandleWaterTierSwitchInput()
     {
         Stats.CycleWaterTier();
-    }
-
-    // ─── 유틸리티 ────────────────────────────────────────────────────────────
-
-    private void InitSkill(ISkill skill)
-    {
-        if (skill != null) skill.Initialize(this);
     }
 
     // ─── 디버그 ──────────────────────────────────────────────────────────────

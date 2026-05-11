@@ -14,9 +14,6 @@ public interface ISkill
     /// <summary>PlayerController.Start()에서 호출합니다.</summary>
     void Initialize(IPlayerContext context);
 
-    /// <summary>스킬 단계를 0~3 범위로 설정합니다.</summary>
-    void SetStage(int stage);
-
     /// <summary>
     /// 스킬 사용을 시도합니다.
     /// 쿨다운 중이거나 선행 조건 미충족 시 아무 일도 일어나지 않습니다.

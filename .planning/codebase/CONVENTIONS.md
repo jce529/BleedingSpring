@@ -22,7 +22,8 @@
 - Unity lifecycle methods follow standard Unity casing: `Awake()`, `Start()`, `Update()`, `OnDestroy()`
 
 **Variables:**
-- camelCase for private fields: `moveInput`, `attackCombo`, `lastAttackTime`, `patrolCenter`
+- camelCase for private fields in logic classes: `moveInput`, `attackCombo`, `lastAttackTime`, `patrolCenter`
+- Underscore-prefixed camelCase (`_camelCase`) for private fields in UI and HUD classes: `_stats`, `_cachedCurrentValue`, `_fadeCoroutine`
 - Private serialized Inspector fields use `[SerializeField] private`: `detectionRadius`, `moveSpeed`, `dashDuration`
 - Public properties use PascalCase: `CurrentState`, `IsGrounded`, `FacingRight`, `WaterTier`
 - Local variables use camelCase: `elapsed`, `direction`, `hits`, `dist`
@@ -48,7 +49,14 @@
   Stats        = GetComponent<PlayerWaterStats>();
   movement     = GetComponent<PlayerMovement>();
   ```
-- Opening braces on same line as declaration: `public class Foo {`
+- Opening braces on the **next line** (Allman style):
+  ```csharp
+  public void ChangeState(PlayerState newState)
+  {
+      if (CurrentState == newState) return;
+      CurrentState = newState;
+  }
+  ```
 - Inline `return` guards at the start of methods for early exits:
   ```csharp
   if (CurrentState == PlayerState.Dead) return;

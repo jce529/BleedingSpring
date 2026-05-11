@@ -1,67 +1,49 @@
-# Editor Guide: Phase 03 Boss UI
+# Editor Guide: Boss UI (Phase 3)
 
-이 가이드는 보스 전용 HUD UI 프리팹을 구성하고 씬에 배치하여 `BossStats` 및 `BossRoomTrigger`와 연결하는 절차를 설명합니다.
+이 가이드는 화면 우측에 고정되어 표시되는 보스 전용 Screen Space HUD(수축하는 오염도 바 및 동적 Sweet Spot 가이드)를 구성하는 방법을 설명합니다.
 
-## Hierarchy Setup (Canvas & Prefab)
+## Hierarchy Setup (UI Canvas)
 
-1.  **Canvas 생성**: 씬에 새로운 Canvas를 생성하거나 기존 UI Canvas를 사용합니다.
-    -   `Render Mode`: `Screen Space - Overlay` 권장.
-2.  **Boss UI Panel 생성**: Canvas 하위에 `BossUI_Panel` 오브젝트를 생성합니다.
-    -   `RectTransform`: 우측 상단 또는 우측 중앙 정렬 (Anchor: `Middle Right`, Pivot: `1, 0.5`).
-    -   `CanvasGroup`: 컴포넌트 추가 (Fade In/Out 및 억제 로직에 사용됨).
-3.  **보스 이름 텍스트 생성**: `BossUI_Panel` 하위에 `Name_Text (TMP)`를 생성합니다.
-    -   보스 이름이 표시될 위치를 잡습니다.
-4.  **바 컨테이너 생성**: `BossUI_Panel` 하위에 `Bar_Container` (Image)를 생성합니다.
-    -   `Image`: 배경색(어두운 투명색)을 설정합니다.
-    -   `RectTransform`: 세로로 긴 직사각형 형태. Pivot을 `(0.5, 0)`으로 설정하여 아래에서 위로 수축하도록 합니다 (D-BOSS-04).
-5.  **정화 게이지 생성**: `Bar_Container` 하위에 `Purification_Fill` (Image)를 생성합니다.
-    -   `Image Type`: `Filled`
-    -   `Fill Method`: `Vertical`
-    -   `Fill Origin`: `Bottom`
-    -   `Color`: 정화된 깨끗한 물의 색상(예: 연한 파란색 또는 에메랄드색).
+씬에 존재하는 전용 UI Canvas (Screen Space - Overlay) 하위에 다음과 같은 구조를 생성합니다.
 
-## Inspector Settings
+- [ ] **BossUI_Manager** (GameObject: `BossUIManager` 부착)
+    - [ ] **BossHUD_Panel** (CanvasGroup 부착, Anchor: Middle Right, Pivot: (1, 0.5))
+        - [ ] **BossName_Text** (TextMeshPro - Text: 보스 이름)
+        - [ ] **Phase_Text** (TextMeshPro - Text: "PHASE 1")
+        - [ ] **Shrinking_Container** (RectTransform: 오염도에 따라 세로로 수축하는 부모)
+            - [ ] **Corruption_Tray** (Image: 배경색 #1E1E23CC)
+            - [ ] **Purification_Fill** (Image: Type=Filled, Method=Vertical, Origin=Bottom, 색상 #40B8FF)
+            - [ ] **SweetSpot_Guide** (Image: 반투명 가이드 영역 #F2D94044, Anchor=Bottom Stretch)
+        - [ ] **HP_Bar_Classic** (선택 사항: 보스의 절대 HP를 보여주는 작은 바)
 
-| Object | Component | Property | Value / Action |
-|--------|-----------|----------|----------------|
-| **BossUI_Panel** | `BossHUDBar` | `Warning Color` | Gold/Yellow (Sweet Spot 강조색) |
-| | | `Pulse Speed` | 5.0 (부드러운 맥동 효과) |
-| | `BossUIManager` | `Fade Duration` | 0.5 |
-| **Bar_Container**| `Image` | `Color` | Dark Gray/Black with Alpha (배경) |
-| **Purification_Fill** | `Image` | `Color` | #40B859 (정화 완료 색상) |
-| **Dummy Boss** | `BossStats` | `Boss Name` | "Corrupted Elder" (테스트용 이름) |
-| | | `Max Corruption` | 100.0 |
-| | | `Purification Range` | X: 30, Y: 70 (Sweet Spot 범위) |
+## Component Settings
 
-## Reference Connections
+### BossUIManager
+- [ ] **Boss UI Canvas Group**: `BossHUD_Panel`의 `CanvasGroup` 연결.
+- [ ] **Boss HUD Bar**: `BossHUD_Panel`에 부착된 `BossHUDBar` 컴포넌트 연결.
+- [ ] **Fade Duration**: 0.5 (기본값).
 
-### 1. BossHUDBar (BossUI_Panel에 위치)
--   `Boss Name Text`: `Name_Text (TMP)` 오브젝트 드래그 앤 드롭.
--   `Canvas Group`: `BossUI_Panel` (자기 자신)의 `CanvasGroup` 드래그 앤 드롭.
--   `Container Rect`: `Bar_Container`의 `RectTransform` 드래그 앤 드롭.
--   `Corruption Fill Image`: `Purification_Fill`의 `Image` 드래그 앤 드롭.
+### BossHUDBar (inherits from PlayerHUDBar)
+- [ ] **Container Rect**: `Shrinking_Container` 연결.
+- [ ] **Corruption Fill Image**: `Purification_Fill` 이미지 연결.
+- [ ] **Boss Name Text**: `BossName_Text` 연결.
+- [ ] **Phase Text**: `Phase_Text` 연결.
+- [ ] **Sweet Spot Guide**: `SweetSpot_Guide`의 RectTransform 연결.
 
-### 2. BossUIManager (씬의 Manager 오브젝트 또는 BossUI_Panel에 위치)
--   `Boss UI Canvas Group`: `BossUI_Panel`의 `CanvasGroup` 할당.
--   `Boss HUD Bar`: `BossUI_Panel`의 `BossHUDBar` 할당.
+## Visual Tokens
 
-### 3. BossRoomTrigger (보스 방 입구 트리거 오브젝트)
--   `Collider2D`: `Is Trigger` 체크.
--   `Boss Stats`: 테스트용 보스 오브젝트의 `BossStats` 할당.
+- **Position**: 화면 오른쪽 끝에서 약 40px 안쪽에 배치.
+- **Size**: 너비 약 80~100px, 기본 높이(Max Corruption 시) 약 600~800px.
+- **Sweet Spot Guide**: 컨테이너 안에서 HP에 따라 위치와 크기가 동적으로 변하므로, 초기 앵커는 (0, 0, 1, 1)로 설정하고 코드가 제어하게 함.
+- **Pulse Speed**: 8.0 (Sweet Spot 진입 시 맥동 속도).
 
-## Visual Tokens & URP Bloom
--   **Glow 효과 (Sweet Spot)**:
-    -   `Purification_Fill` 이미지의 Material에 `Emission`을 활성화하거나, 쉐이더에서 HDR 색상을 지원하도록 설정합니다.
-    -   전역 `Volume` (Global Volume)에서 `Bloom` 효과를 활성화하여 `Warning Color`가 맥동할 때 빛나는 효과가 나도록 조정합니다 (Intensity 1.0 이상).
+## Integration Test Scenarios
 
-## Manual Test (Play Mode / UAT)
-
-1.  **진입 테스트**: 플레이어가 `BossRoomTrigger`에 닿았을 때 우측 UI 패널이 서서히 나타나는지 확인합니다.
-2.  **체력 수축 테스트**: 보스에게 데미지를 주어 `Current Corruption`이 줄어들 때, `Bar_Container`의 전체 높이가 낮아지는지 확인합니다.
-3.  **정화 게이지 테스트**: 남은 컨테이너 높이 대비 `Purification_Fill`이 차오르는 비율이 `(Max - Current) / Current`로 계산되어 시각적으로 상단부터 차오르는지 확인합니다.
-4.  **Sweet Spot 테스트**: 보스의 체력이 `Purification Range` (예: 30~70) 내에 있을 때 바의 색상이 `Warning Color`로 부드럽게 깜빡이는지 확인합니다.
-5.  **처치 테스트**: 보스의 체력이 0이 되었을 때 UI가 사라지는지 확인합니다.
-6.  **억제 테스트**: 보스 전투 중 보스의 머리 위에 일반 적용 `EnemyWorldSpaceUI`가 나타나지 않는지 확인합니다 (Alpha 0 고정 여부).
+1.  **진입 트리거**: `BossRoomTrigger`가 배치된 구역에 플레이어가 들어가면 우측 UI가 서서히 페이드 인 되는지 확인.
+2.  **수축 및 정화**: 보스 공격 시 오염도에 따라 전체 바가 짧아지고(수축), 안쪽의 파란색 게이지가 차오르는지 확인.
+3.  **동적 가이드**: 보스의 HP가 깎임에 따라 `SweetSpot_Guide`의 영역이 점점 좁아지며 중심부(0.5)로 수렴하는지 확인.
+4.  **페이즈 갱신**: 보스의 페이즈가 전환될 때 "PHASE X" 텍스트가 즉시 업데이트되는지 확인.
+5.  **처치 및 페이드**: 보스 사망 시 UI가 서서히 페이드 아웃되며 비활성화되는지 확인.
 
 ---
-*Created by unity-editor-guide skill*
+*Created for Phase 3: Boss UI Milestone*

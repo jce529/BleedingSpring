@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-모든 일반 적 머리 위에 수직형 수축 바(Vertical Shrinking Bar)를 구현한다.
+전투상대의 일반 적 뒤에 수직형 수축 바를 구현한다.
 이 바는 적의 오염도(Corruption)를 베이스로 하며, 정화(Purification) 정도를 채움(Fill)으로 표시한다.
 보스 억제 로직, 스킬 쿨다운 UI, 부유 데미지 숫자는 이 Phase 범위 밖이다.
 
@@ -24,9 +24,9 @@
 - **D-04 (HP Indicator):** 별도의 HP 바는 표시하지 않는다. 수축하는 오염도 바가 적의 실질적인 '체력'과 '상태'를 동시에 나타내는 통합 지표(Combined Indicator) 역할을 한다.
 
 ### Sweet Spot 시각화
-- **D-05 (Markers):** 오염도 바 위에 Sweet Spot 구간을 표시한다.
-- **D-06 (Scaling):** Sweet Spot 마커는 바가 수축하더라도 **현재 높이 대비 상대적 비율(Proportional)**로 위치를 유지한다 (`RectTransform` anchors 사용).
-- **D-07 (Feedback):** 적의 현재 오염도가 Sweet Spot 범위 안에 들어오면 오버레이 색상이 밝아지거나 반짝이며, 진입하는 순간 **트리거 플래시(Trigger Flash)** 효과를 준다.
+- **D-05 (No Markers):** 오염도 바 위에 별도의 Sweet Spot 마커나 구간을 직접 표시하지 않는다.
+- **D-06 (Glow Effect):** 적의 현재 오염도가 Sweet Spot 범위 안에 들어오면 오염도 바(또는 정화 Fill) 전체가 밝게 빛나거나 강조되는 시각적 효과를 준다.
+- **D-07 (Flash Feedback):** Sweet Spot 범위에 진입하는 정확한 시점에 **트리거 플래시(Trigger Flash)** 효과를 주어 플레이어에게 정화 타이밍을 알린다.
 
 ### 레이어링 & 렌더링
 - **D-08 (Layering):** **Standard UI Layer**를 사용한다 (환경 오브젝트에 의해 가려질 수 있음).

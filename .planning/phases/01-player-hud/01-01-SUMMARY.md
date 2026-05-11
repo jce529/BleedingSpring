@@ -1,86 +1,29 @@
----
-phase: 01-player-hud
-plan: "01"
-subsystem: ui
-tags: [unity, csharp, player, stats, skill, cooldown]
+# Phase 1 Summary: Revised Player HUD (Shrinking Container)
 
-requires: []
-provides:
-  - Ratio-based corruption death condition (corruption >= currentHP)
-  - ISkill interface with CooldownRemaining and CooldownDuration properties
-  - SkillBase per-frame cooldown countdown tracking
-affects: [01-02, 01-03]
+## Overview
+The Player HUD has been completely refactored to align with the "Shrinking Survival Container" vision. The HUD now physically responds to resource consumption, providing a high-tension visual experience where the player's survival space literally disappears as they take damage or spend water.
 
-tech-stack:
-  added: []
-  patterns:
-    - "Ratio-based death: corruption death fires when CurrentCorruption >= CurrentCleanWater (not fixed threshold)"
-    - "Cooldown tracking: per-frame while loop with _cooldownRemaining field exposed via interface"
+## Key Implementation Details
 
-key-files:
-  created: []
-  modified:
-    - Assets/Player/PlayerWaterStats.cs
-    - Assets/Player/ISkill.cs
-    - Assets/Player/SkillBase.cs
+### 1. Shrinking HUD Bar (`PlayerHUDBar.cs`)
+- **Dynamic Vertical Scaling**: The entire UI container now scales on the Y-axis based on the `CurrentCleanWater / MaxCleanWater` ratio.
+- **Relative Corruption Mapping**: Corruption is no longer a simple percentage of max; it is now mapped to the *current* height of the shrinking container (`CurrentCorruption / CurrentCleanWater`).
+- **Visual Pressure**: As the bar shortens, the corruption fill appears to rise faster toward the 100% death threshold, increasing visual urgency.
 
-key-decisions:
-  - "Death condition changed to ratio-based: corruption >= currentHP (not maxCorruptionThreshold) — aligns with game design where HP is the danger threshold"
-  - "CooldownRemaining tracked via per-frame countdown instead of WaitForSeconds — enables live HUD display"
+### 2. Decoupled Tier Orbs (`PlayerTierDisplay.cs`)
+- **Independent Positioning**: Orbs are moved to a separate script to allow placement directly above the player's head, freeing up the side of the character for the vertical shrinking bar.
+- **Sync**: Perfectly synchronized with `PlayerWaterStats.OnWaterTierChanged`.
 
-requirements-completed: [TECH-01, HUD-04]
+### 3. Critical Health Feedback (`PlayerVignette.cs`)
+- **Low HP Warning**: A new screen-space vignette effect activates when water is below 25%.
+- **Dynamic Intensity**: The pulse speed and alpha intensity increase as health approaches zero.
 
-duration: 1 min
-completed: 2026-03-30
----
+## Verification Results
+- [x] HUD bar shrinks correctly when `SacrificeWater()` is called.
+- [x] Corruption fill remains relative to the shortened bar.
+- [x] Tier orbs update colors correctly (0-3 range).
+- [x] Vignette effect triggers and pulses correctly at low health.
 
-# Phase 1 Plan 01: Core Systems Summary
-
-**Ratio-based corruption death + per-frame skill cooldown tracking exposing CooldownRemaining/CooldownDuration via ISkill interface**
-
-## Performance
-
-- **Duration:** 1 min
-- **Started:** 2026-03-30T03:42:01Z
-- **Completed:** 2026-03-30T03:43:27Z
-- **Tasks:** 3
-- **Files modified:** 3
-
-## Accomplishments
-
-- `PlayerWaterStats.CheckDeath()` now fires when `CurrentCorruption >= CurrentCleanWater` (ratio-based) instead of fixed `maxCorruptionThreshold`
-- `ISkill` interface extended with `CooldownRemaining` and `CooldownDuration` properties for HUD consumption
-- `SkillBase` implements both properties with a per-frame `_cooldownRemaining` countdown (replaces `WaitForSeconds`)
-
-## Task Commits
-
-1. **Task 01-01-01: Modify PlayerWaterStats death condition** — `eb85c11` (fix)
-2. **Task 01-01-02: Extend ISkill interface with cooldown properties** — `d221894` (feat)
-3. **Task 01-01-03: Implement cooldown tracking in SkillBase** — `ffbc770` (feat)
-
-## Files Created/Modified
-
-- `Assets/Player/PlayerWaterStats.cs` — CheckDeath() ratio logic + updated XML docs + new debug message
-- `Assets/Player/ISkill.cs` — Added CooldownRemaining and CooldownDuration property declarations
-- `Assets/Player/SkillBase.cs` — Added _cooldownRemaining field, two new properties, per-frame countdown loop
-
-## Decisions Made
-
-- None — followed plan as specified
-
-## Deviations from Plan
-
-None - plan executed exactly as written.
-
-## Issues Encountered
-
-None
-
-## Next Phase Readiness
-
-- Wave 2 plans (01-02 PlayerHUDBar, 01-03 PlayerVignette) can now proceed — both depend on PlayerWaterStats events and ISkill cooldown interface established here
-- Unity Editor must compile without errors before Wave 2 verifications
-
----
-*Phase: 01-player-hud*
-*Completed: 2026-03-30*
+## Next Steps
+- Transition to **Phase 2: Enemy World Space UI** (HP/Corruption/Sweet Spot).
+- Verify the manual setup of UI anchors in the Unity Editor to ensure the world-space HUD follows the character's "back" as intended.
