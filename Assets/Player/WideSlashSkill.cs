@@ -32,9 +32,9 @@ public class WideSlashSkill : SkillBase
 
     protected override bool CanUse()
     {
-        if (currentStage >= 3 && Context.Stats.CurrentCleanWater <= tsunamiHpCost)
+        if (Stage >= 3 && Context.Stats.CurrentCleanWater <= tsunamiHpCost * costMultiplier)
         {
-            Debug.Log($"[U] 해일참 불가 — HP 부족 ({Context.Stats.CurrentCleanWater:F0}/{tsunamiHpCost:F0})");
+            Debug.Log($"[U] 해일참 불가 — HP 부족 ({Context.Stats.CurrentCleanWater:F0}/{tsunamiHpCost * costMultiplier:F0})");
             return false;
         }
         return true;
@@ -42,8 +42,8 @@ public class WideSlashSkill : SkillBase
 
     protected override IEnumerator ExecuteSkill()
     {
-        if (currentStage <= 2)
-            ExecuteSlash(currentStage);
+        if (Stage <= 2)
+            ExecuteSlash(Stage);
         else
             ExecuteTsunamiSlash();
 
@@ -55,7 +55,7 @@ public class WideSlashSkill : SkillBase
     {
         float   width  = baseWidth  * WidthMult[stage];
         float   height = baseHeight * HeightMult[stage];
-        float   damage = baseDamage * DamageMult[stage];
+        float   damage = baseDamage * DamageMult[stage] * effectMultiplier;
         Vector2 size   = new Vector2(width, height);
         Vector2 center = GetFrontBoxCenter(width);
 
@@ -89,7 +89,7 @@ public class WideSlashSkill : SkillBase
     // 3단계: 해일참
     private void ExecuteTsunamiSlash()
     {
-        Context.Stats.SacrificeWater(tsunamiHpCost);
+        Context.Stats.SacrificeWater(tsunamiHpCost * costMultiplier);
 
         Vector2 size   = new Vector2(tsunamiWidth, tsunamiHeight);
         Vector2 center = GetFrontBoxCenter(tsunamiWidth);
@@ -99,7 +99,7 @@ public class WideSlashSkill : SkillBase
         var enemyHits = Physics2D.OverlapBoxAll(center, size, 0f, enemyLayer);
         foreach (var h in enemyHits)
         {
-            float dmg = baseDamage * DamageMult[3];
+            float dmg = baseDamage * DamageMult[3] * effectMultiplier;
             h.GetComponent<IDamageable>()?.TakeDamage(dmg, GetCorruptionDamage(dmg));
         }
 
@@ -108,7 +108,7 @@ public class WideSlashSkill : SkillBase
             Destroy(c.gameObject);
 
         Debug.Log($"[U] 해일참 — 박스: {tsunamiWidth:F0}×{tsunamiHeight:F0} | " +
-                  $"적중: {enemyHits.Length}명 | HP 소모: {tsunamiHpCost:F0} | 오염 제거: {contamHits.Length}개");
+                  $"적중: {enemyHits.Length}명 | HP 소모: {tsunamiHpCost * costMultiplier:F0} | 오염 제거: {contamHits.Length}개");
 
         if (tsunamiEffect != null)
             Instantiate(tsunamiEffect, transform.position, Quaternion.identity);
@@ -116,11 +116,21 @@ public class WideSlashSkill : SkillBase
 
     private void OnDrawGizmosSelected()
     {
-        int     s      = Mathf.Clamp(currentStage, 0, 2);
-        float   width  = baseWidth  * WidthMult[s];
-        float   height = baseHeight * HeightMult[s];
-        float   dir    = transform.localScale.x > 0 ? 1f : -1f;
-        Vector2 center = (Vector2)transform.position + Vector2.right * dir * width * 0.5f;
+        float width, height;
+
+        if (Stage >= 3)
+        {
+            width  = tsunamiWidth;
+            height = tsunamiHeight;
+        }
+        else
+        {
+            int s = Mathf.Clamp(Stage, 0, 2);
+            width  = baseWidth  * WidthMult[s];
+            height = baseHeight * HeightMult[s];
+        }
+
+        Vector2 center = GetFrontBoxCenter(width);
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireCube(center, new Vector3(width, height, 0f));

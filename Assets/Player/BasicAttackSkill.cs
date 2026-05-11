@@ -31,23 +31,23 @@ public class BasicAttackSkill : SkillBase
 
     protected override IEnumerator ExecuteSkill()
     {
-        float   width  = boxWidth + WidthBonus[currentStage];
+        float   width  = boxWidth + WidthBonus[Stage];
         Vector2 size   = new Vector2(width, boxHeight);
         Vector2 center = GetFrontBoxCenter(width);
 
-        Debug.Log($"[J] {StageName[currentStage]} — 박스: {width:F2}×{boxHeight:F2} | 데미지: {baseDamage:F0}");
+        Debug.Log($"[J] {StageName[Stage]} — 박스: {width:F2}×{boxHeight:F2} | 데미지: {baseDamage * effectMultiplier:F0}");
         ShowBoxIndicator(center, size);
 
-        int hits = DamageBox(center, size, baseDamage);
+        int hits = DamageBox(center, size, baseDamage * effectMultiplier);
         Debug.Log($"[J] 1차 적중: {hits}명");
 
         // 3단계: 잔상 추가 타격
-        if (currentStage >= 3)
+        if (Stage >= 3)
         {
             yield return new WaitForSeconds(0.1f);
             ShowBoxIndicator(center, size);
-            int echoHits = DamageBox(center, size, baseDamage * 0.5f);
-            Debug.Log($"[J] 잔상 추가 적중: {echoHits}명 | 데미지: {baseDamage * 0.5f:F0}");
+            int echoHits = DamageBox(center, size, baseDamage * effectMultiplier * 0.5f);
+            Debug.Log($"[J] 잔상 추가 적중: {echoHits}명 | 데미지: {baseDamage * effectMultiplier * 0.5f:F0}");
         }
 
         yield break;
@@ -63,9 +63,8 @@ public class BasicAttackSkill : SkillBase
 
     private void OnDrawGizmosSelected()
     {
-        float   width  = boxWidth + (currentStage < 4 ? WidthBonus[currentStage] : 0f);
-        float   dir    = transform.localScale.x > 0 ? 1f : -1f;
-        Vector2 center = (Vector2)transform.position + Vector2.right * dir * width * 0.5f;
+        float   width  = boxWidth + (Stage < 4 ? WidthBonus[Mathf.Clamp(Stage, 0, 3)] : 0f);
+        Vector2 center = GetFrontBoxCenter(width);
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireCube(center, new Vector3(width, boxHeight, 0f));

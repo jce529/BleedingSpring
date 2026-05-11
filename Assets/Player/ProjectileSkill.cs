@@ -27,9 +27,9 @@ public class ProjectileSkill : SkillBase
 
     protected override bool CanUse()
     {
-        if (currentStage >= 3 && Context.Stats.CurrentCleanWater <= sniperHpCost)
+        if (Stage >= 3 && Context.Stats.CurrentCleanWater <= sniperHpCost * costMultiplier)
         {
-            Debug.Log($"[I] 혈연의 쐐기 불가 — HP 부족 ({Context.Stats.CurrentCleanWater:F0}/{sniperHpCost:F0})");
+            Debug.Log($"[I] 혈연의 쐐기 불가 — HP 부족 ({Context.Stats.CurrentCleanWater:F0}/{sniperHpCost * costMultiplier:F0})");
             return false;
         }
         return true;
@@ -37,20 +37,20 @@ public class ProjectileSkill : SkillBase
 
     protected override IEnumerator ExecuteSkill()
     {
-        switch (currentStage)
+        switch (Stage)
         {
             case 0:
                 Debug.Log("[I] 0단계 — 발사 없음 (어그로 모션)");
                 break;
 
             case 1:
-                FireProjectile(baseDamage, stage1Speed, penetrating: false);
-                Debug.Log($"[I] 수압탄 — 속도: {stage1Speed} | 데미지: {baseDamage:F0}");
+                FireProjectile(baseDamage * effectMultiplier, stage1Speed, penetrating: false);
+                Debug.Log($"[I] 수압탄 — 속도: {stage1Speed} | 데미지: {baseDamage * effectMultiplier:F0}");
                 break;
 
             case 2:
-                FireProjectile(baseDamage * 1.3f, stage2Speed, penetrating: false);
-                Debug.Log($"[I] 고속 수압탄 — 속도: {stage2Speed} | 데미지: {baseDamage * 1.3f:F0}");
+                FireProjectile(baseDamage * 1.3f * effectMultiplier, stage2Speed, penetrating: false);
+                Debug.Log($"[I] 고속 수압탄 — 속도: {stage2Speed} | 데미지: {baseDamage * 1.3f * effectMultiplier:F0}");
                 break;
 
             case 3:
@@ -83,7 +83,7 @@ public class ProjectileSkill : SkillBase
     // 즉발 레이저 (3단계) — 직선 관통
     private void FireLaser()
     {
-        Context.Stats.SacrificeWater(sniperHpCost);
+        Context.Stats.SacrificeWater(sniperHpCost * costMultiplier);
 
         Vector2 size   = new Vector2(sniperRange, laserHeight);
         Vector2 center = GetFrontBoxCenter(sniperRange);
@@ -91,10 +91,12 @@ public class ProjectileSkill : SkillBase
         // 레이저 시각 표시
         ShowBoxIndicator(center, size);
 
+        float laserDmg = sniperDamage * effectMultiplier;
+
         // 관통 판정 — 범위 내 모든 적 타격
         var hits = Physics2D.OverlapBoxAll(center, size, 0f, enemyLayer);
         foreach (var h in hits)
-            h.GetComponent<IDamageable>()?.TakeDamage(sniperDamage, GetCorruptionDamage(sniperDamage));
+            h.GetComponent<IDamageable>()?.TakeDamage(laserDmg, GetCorruptionDamage(laserDmg));
 
         // 에디터용 레이 시각화
         float   dir    = Context.FacingRight ? 1f : -1f;
@@ -102,15 +104,14 @@ public class ProjectileSkill : SkillBase
         Debug.DrawRay(origin, Vector2.right * dir * sniperRange, Color.cyan, 0.5f);
 
         Debug.Log($"[I] 혈연의 쐐기 — 레이저 사거리: {sniperRange:F0} | " +
-                  $"관통 적중: {hits.Length}명 | 데미지: {sniperDamage:F0} | HP 소모: {sniperHpCost:F0}");
+                  $"관통 적중: {hits.Length}명 | 데미지: {laserDmg:F0} | HP 소모: {sniperHpCost * costMultiplier:F0}");
     }
 
     private void OnDrawGizmosSelected()
     {
-        if (currentStage == 3)
+        if (Stage == 3)
         {
-            float   dir    = transform.localScale.x > 0 ? 1f : -1f;
-            Vector2 center = (Vector2)transform.position + Vector2.right * dir * sniperRange * 0.5f;
+            Vector2 center = GetFrontBoxCenter(sniperRange);
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(center, new Vector3(sniperRange, laserHeight, 0f));
         }
