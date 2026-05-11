@@ -8,9 +8,12 @@ using UnityEngine;
 public abstract class SkillBase : MonoBehaviour, ISkill
 {
     [Header("공통 스킬 설정")]
-    [SerializeField, Range(0, 3)] protected int      currentStage     = 0;
-    [SerializeField]              protected float     cooldownDuration = 0.5f;
+    [SerializeField] protected float cooldownDuration = 0.5f;
     [SerializeField]              protected LayerMask enemyLayer;
+
+    [Header("태세 배율 (보조 태세용 인스턴스는 0.5 설정)")]
+    [SerializeField] protected float costMultiplier   = 1f;
+    [SerializeField] protected float effectMultiplier = 1f;
 
     private float _cooldownRemaining;
 
@@ -26,7 +29,7 @@ public abstract class SkillBase : MonoBehaviour, ISkill
     [SerializeField] protected float      boxCenterY        = 0.9f;
 
     public bool IsOnCooldown { get; private set; }
-    public int  Stage        => currentStage;
+    public int  Stage        => Context?.Stats.WaterTier ?? 0;
     public float CooldownRemaining => _cooldownRemaining;
     public float CooldownDuration  => cooldownDuration;
 
@@ -46,8 +49,6 @@ public abstract class SkillBase : MonoBehaviour, ISkill
     protected virtual void OnInitialize() { }
 
     // ─── ISkill 구현 ─────────────────────────────────────────────────────────
-
-    public void SetStage(int stage) => currentStage = Mathf.Clamp(stage, 0, 3);
 
     public void TryUse()
     {
@@ -87,7 +88,7 @@ public abstract class SkillBase : MonoBehaviour, ISkill
     /// <summary>현재 단계의 오염도 데미지를 반환합니다. (hpDamage × 단계별 비율)</summary>
     protected float GetCorruptionDamage(float hpDamage)
     {
-        int idx = Mathf.Clamp(currentStage, 0, corruptionRatioPerStage.Length - 1);
+        int idx = Mathf.Clamp(Stage, 0, corruptionRatioPerStage.Length - 1);
         return hpDamage * corruptionRatioPerStage[idx];
     }
 
@@ -99,7 +100,11 @@ public abstract class SkillBase : MonoBehaviour, ISkill
     /// </summary>
     protected Vector2 GetFrontBoxCenter(float boxWidth, float offsetY = 0f)
     {
-        float dir = Context.FacingRight ? 1f : -1f;
+        // 에디터 Gizmos에서도 작동하도록 Context null 체크 및 localScale.x 활용
+        float dir = (Context != null) 
+            ? (Context.FacingRight ? 1f : -1f) 
+            : (transform.localScale.x > 0 ? 1f : -1f);
+
         return (Vector2)transform.position
                + Vector2.right * dir * (frontOffset + boxWidth * 0.5f)
                + Vector2.up    * (boxCenterY + offsetY);
@@ -116,7 +121,7 @@ public abstract class SkillBase : MonoBehaviour, ISkill
         var rb = Context.Rigidbody;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        Debug.Log($"[{GetType().Name}] 발동 — {currentStage}단계 | " +
+        Debug.Log($"[{GetType().Name}] 발동 — {Stage}단계 | " +
                   $"HP: {Context.Stats.CurrentCleanWater:F0} | " +
                   $"오염도: {Context.Stats.CurrentCorruption:F0}");
 
